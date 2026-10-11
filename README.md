@@ -1,7 +1,7 @@
 ## 🛠️ Teknologi yang Digunakan
 
 - **Frontend**: React Native (JavaScript/TypeScript)
-- **Backend**: Firebase (Authentication, Cloud Firestore, Storage)
+- **Backend**: Supabase
 - **Navigasi**: React Navigation
 
 ## 🚀 Cara Menjalankan Proyek (Setup & Installation)
