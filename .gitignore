@@ -31,7 +31,12 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env*
+!.env.example
+!.env.*.example
+
+# local editor and MCP configuration
+.vscode/mcp.json
 
 # typescript
 *.tsbuildinfo
@@ -41,3 +46,4 @@ example
 # generated native folders
 /ios
 /android
+local.properties

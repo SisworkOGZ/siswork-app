@@ -30,6 +30,14 @@
     },
     "plugins": [
       "expo-router",
+      "expo-document-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Siswork memerlukan akses ke foto dan video untuk melampirkannya ke karya Anda.",
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -39,6 +47,7 @@
         }
       ]
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
