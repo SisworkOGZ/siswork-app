@@ -22,7 +22,8 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || !password.trim()) {
       Alert.alert("Form Belum Lengkap", "Silakan isi email dan password Anda.");
       return;
     }
@@ -31,25 +32,25 @@ export default function LoginScreen() {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: normalizedEmail,
         password,
       });
 
       if (error) throw error;
-
-      if (data.session) {
-        const metadata = data.user.user_metadata;
-        const nisn = metadata.nisn;
-
-        if (typeof nisn === "string" && data.session) {
-          await saveStudentRegistration(data.user.id, data.session, { nisn });
-        }
-
-        // Berhasil login, navigasi ke halaman utama
-        router.replace("/(tabs)");
+      if (!data.session || !data.user) {
+        throw new Error("Sesi login tidak lengkap. Coba masuk kembali.");
       }
-    } catch (error: any) {
-      Alert.alert("Login Gagal", error.message || "Email atau password salah.");
+
+      const nisn = data.user.user_metadata?.nisn;
+      if (typeof nisn === "string") {
+        await saveStudentRegistration(data.user.id, data.session, { nisn });
+      }
+
+      router.replace("/(tabs)");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Email atau password salah.";
+      Alert.alert("Login Gagal", message);
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,24 @@ import { supabase } from "@/core/services/supabase";
 import type { ProjectRow, ProjectStatus } from "@/core/types/communication";
 
 const projectColumns =
-  "id, conversation_id, school_id, buyer_id, seller_id, title, description, amount, status, delivery_url, revision_request, created_at, updated_at";
+  "id, conversation_id, school_id, buyer_id, seller_id, title, description, amount, status, revision_limit, revision_count, extra_revisions_granted, delivery_url, revision_request, created_at, updated_at";
+
+const isValidHttpUrl = (value: string): boolean => {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) && !!url.hostname;
+  } catch {
+    return false;
+  }
+};
+
+const normalizeProjectText = (value: string, maxLength: number) => {
+  const normalized = value.trim();
+  if (normalized.length < 5 || normalized.length > maxLength) {
+    throw new Error(`Masukkan teks dengan panjang 5–${maxLength} karakter.`);
+  }
+  return normalized;
+};
 
 export async function loadMyProjects(userId: string): Promise<ProjectRow[]> {
   const { data, error } = await supabase
@@ -34,7 +51,7 @@ async function updateProject(
 
 export function submitProjectDelivery(projectId: string, deliveryUrl: string) {
   const url = deliveryUrl.trim();
-  if (!/^https?:\/\/\S+$/i.test(url)) {
+  if (!isValidHttpUrl(url)) {
     throw new Error("Masukkan tautan hasil kerja yang valid.");
   }
   return updateProject(projectId, {
@@ -45,10 +62,7 @@ export function submitProjectDelivery(projectId: string, deliveryUrl: string) {
 }
 
 export function requestProjectRevision(projectId: string, request: string) {
-  const normalizedRequest = request.trim();
-  if (normalizedRequest.length < 5 || normalizedRequest.length > 1000) {
-    throw new Error("Permintaan revisi harus terdiri dari 5–1.000 karakter.");
-  }
+  const normalizedRequest = normalizeProjectText(request, 1000);
   return updateProject(projectId, {
     revision_request: normalizedRequest,
     status: "revision",
@@ -60,4 +74,20 @@ export function completeProject(projectId: string) {
     status: "completed" satisfies ProjectStatus,
     revision_request: null,
   });
+}
+
+export async function grantExtraProjectRevision(
+  projectId: string,
+): Promise<number> {
+  const { data, error } = await supabase.rpc(
+    "grant_extra_project_revision",
+    { p_project_id: projectId },
+  );
+  if (error) {
+    throw new Error(`Gagal membuka revisi tambahan: ${error.message}`);
+  }
+  if (typeof data !== "number") {
+    throw new Error("Server tidak mengembalikan batas revisi terbaru.");
+  }
+  return data;
 }

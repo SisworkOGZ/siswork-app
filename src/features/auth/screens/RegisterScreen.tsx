@@ -27,19 +27,28 @@ interface RegisterFormData {
   acceptTerms: boolean;
 }
 
+const createEmptyForm = (): RegisterFormData => ({
+  nisn: "",
+  fullName: "",
+  school: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  acceptTerms: false,
+});
+
 export default function RegisterScreen() {
   const router = useRouter();
-  const [formData, setFormData] = useState<RegisterFormData>({
-    nisn: "",
-    fullName: "",
-    school: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: false,
-  });
+  const [formData, setFormData] = useState<RegisterFormData>(createEmptyForm);
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const updateFormField = <K extends keyof RegisterFormData>(
+    field: K,
+    value: RegisterFormData[K],
+  ) => {
+    setFormData((previous) => ({ ...previous, [field]: value }));
+  };
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isValidatingNisn, setIsValidatingNisn] = useState<boolean>(false);
   const [isNisnVerified, setIsNisnVerified] = useState<boolean>(false);
@@ -125,18 +134,15 @@ export default function RegisterScreen() {
   const handleNisnChange = (value: string) => {
     const nisn = value.replace(/\D/g, "").slice(0, 10);
     const requestId = ++nisnRequestId.current;
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...createEmptyForm(),
       nisn,
-      fullName: "",
-      school: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      fullName: previous.fullName && previous.nisn === nisn ? previous.fullName : "",
+      school: previous.school && previous.nisn === nisn ? previous.school : "",
     }));
     setIsNisnVerified(false);
     setIsValidatingNisn(false);
-    setErrors((prev) => ({ ...prev, nisn: "" }));
+    setErrors((previous) => ({ ...previous, nisn: "" }));
 
     if (nisn.length === 10) {
       void checkNisn(nisn, requestId);
@@ -144,7 +150,7 @@ export default function RegisterScreen() {
   };
 
   const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: Record<string, string> = {};
 
     if (!isNisnVerified) newErrors.nisn = "Masukkan 10 digit NISN yang valid.";
     if (!formData.email) newErrors.email = "Email wajib diisi.";
@@ -287,9 +293,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.email}
-                onChangeText={(email) =>
-                  setFormData((prev) => ({ ...prev, email }))
-                }
+                onChangeText={(email) => updateFormField("email", email)}
                 placeholder="nama@email.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -306,9 +310,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.password}
-                onChangeText={(password) =>
-                  setFormData((prev) => ({ ...prev, password }))
-                }
+                onChangeText={(password) => updateFormField("password", password)}
                 placeholder="Minimal 8 karakter"
                 secureTextEntry
                 autoCapitalize="none"
@@ -325,7 +327,7 @@ export default function RegisterScreen() {
                 style={styles.input}
                 value={formData.confirmPassword}
                 onChangeText={(confirmPassword) =>
-                  setFormData((prev) => ({ ...prev, confirmPassword }))
+                  updateFormField("confirmPassword", confirmPassword)
                 }
                 placeholder="Ulangi password"
                 secureTextEntry
@@ -341,7 +343,7 @@ export default function RegisterScreen() {
               <Switch
                 value={formData.acceptTerms}
                 onValueChange={(acceptTerms) =>
-                  setFormData((prev) => ({ ...prev, acceptTerms }))
+                  updateFormField("acceptTerms", acceptTerms)
                 }
                 disabled={!isNisnVerified || isSubmitting}
               />

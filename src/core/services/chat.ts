@@ -18,6 +18,7 @@ export type ChatMessage = {
 export type ChatConversation = {
   id: string;
   peerId: string;
+  isSeller: boolean;
   name: string;
   initials: string;
   color: string;
@@ -72,6 +73,10 @@ const parseInvoicePayload = (value: unknown): InvoicePayload | null => {
     title: value.title,
     amount: value.amount,
     currency: "IDR",
+    ...("revision_limit" in value &&
+    typeof value.revision_limit === "number"
+      ? { revision_limit: value.revision_limit }
+      : {}),
     ...("description" in value && typeof value.description === "string"
       ? { description: value.description }
       : {}),
@@ -104,6 +109,30 @@ const parseMediaPayload = (value: unknown): MediaMessagePayload | null => {
 const missingMessageTypeColumn = (error: { code?: string; message?: string }) =>
   error.code === "42703" &&
   /message_type|payload/.test(error.message ?? "");
+
+const getMessageType = (
+  item: { message_type?: MessageType | null },
+  legacySchema: boolean,
+): MessageType => (legacySchema ? "text" : (item.message_type ?? "text"));
+
+const getMessagePayload = (
+  item: { payload?: unknown },
+  legacySchema: boolean,
+): unknown => (legacySchema ? null : item.payload ?? null);
+
+const resolveMediaPayload = async (
+  mediaPayload: MediaMessagePayload,
+): Promise<MediaMessagePayload | null> => {
+  const parsedMedia = parseMediaPayload(mediaPayload);
+  if (!parsedMedia) return null;
+
+  const { data: signedUrl, error: signedUrlError } = await supabase.storage
+    .from("chat-media")
+    .createSignedUrl(parsedMedia.url, 60 * 60);
+
+  if (signedUrlError) throw signedUrlError;
+  return { ...parsedMedia, url: signedUrl.signedUrl };
+};
 
 const formatConversationTime = (timestamp: string) => {
   const date = new Date(timestamp);
@@ -205,6 +234,7 @@ export async function loadMyConversations(
     return {
       id: item.id,
       peerId,
+      isSeller: item.seller_id === userId,
       name,
       initials: initialsFor(name),
       color: colorFor(peerId),
@@ -243,40 +273,35 @@ export async function loadConversationMessages(
     data = legacyResult.data as typeof data;
     error = legacyResult.error;
   }
+
   if (error) throw error;
+
+  const messageRows = (data ?? []).reverse();
   return Promise.all(
-    (data ?? []).reverse().map(async (item) => {
-      const messageType = legacySchema
-        ? "text"
-        : (item as (typeof data extends (infer Row)[] | null ? Row : never) & {
-            message_type: MessageType;
-            payload: unknown;
-          }).message_type;
-      const messagePayload = legacySchema
-        ? null
-        : (item as { payload: unknown }).payload;
+    messageRows.map(async (item) => {
+      const messageType = getMessageType(item as { message_type?: MessageType }, legacySchema);
+      const messagePayload = getMessagePayload(item as { payload?: unknown }, legacySchema);
+
       const parsedMedia =
         messageType === "image" || messageType === "file"
           ? parseMediaPayload(messagePayload)
           : null;
-      let payload: MessagePayload =
+
+      const payload: MessagePayload =
         messageType === "invoice"
           ? parseInvoicePayload(messagePayload)
-          : parsedMedia;
-      if (parsedMedia) {
-        const { data: signedUrl, error: signedUrlError } = await supabase.storage
-          .from("chat-media")
-          .createSignedUrl(parsedMedia.url, 60 * 60);
-        if (signedUrlError) throw signedUrlError;
-        payload = { ...parsedMedia, url: signedUrl.signedUrl };
-      }
+          : parsedMedia ?? null;
+
+      const resolvedPayload =
+        parsedMedia !== null ? await resolveMediaPayload(parsedMedia) : payload;
+
       return {
         id: item.id,
         text: item.message_text,
         time: formatTime(item.created_at),
         isMine: item.sender_id === userId,
         type: messageType,
-        payload,
+        payload: resolvedPayload,
       };
     }),
   );
@@ -345,12 +370,37 @@ export async function createProjectInvoice(
   title: string,
   description: string,
   amount: number,
+  revisionLimit: number,
 ): Promise<string> {
+  const normalizedTitle = title.trim();
+  const normalizedDescription = description.trim();
+  if (normalizedTitle.length < 3 || normalizedTitle.length > 200) {
+    throw new Error("Judul proyek harus terdiri dari 3–200 karakter.");
+  }
+  if (normalizedDescription.length > 1000) {
+    throw new Error("Deskripsi proyek maksimal 1.000 karakter.");
+  }
+  if (
+    !Number.isFinite(amount) ||
+    amount < 0 ||
+    amount > 9_999_999_999.99
+  ) {
+    throw new Error("Masukkan jumlah invoice yang valid.");
+  }
+  if (
+    !Number.isInteger(revisionLimit) ||
+    revisionLimit < 0 ||
+    revisionLimit > 20
+  ) {
+    throw new Error("Batas revisi gratis harus antara 0–20 kali.");
+  }
+
   const { data, error } = await supabase.rpc("create_project_invoice", {
     p_conversation_id: conversationId,
-    p_title: title.trim(),
-    p_description: description.trim(),
+    p_title: normalizedTitle,
+    p_description: normalizedDescription,
     p_amount: amount,
+    p_revision_limit: revisionLimit,
   });
   if (error) {
     throw new Error(`Gagal membuat invoice proyek: ${error.message}`);

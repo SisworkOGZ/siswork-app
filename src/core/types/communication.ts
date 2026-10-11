@@ -5,6 +5,7 @@ export type InvoicePayload = {
   title: string;
   amount: number;
   currency: "IDR";
+  revision_limit?: number;
   description?: string;
 };
 
@@ -39,6 +40,9 @@ export type ProjectRow = {
   description: string | null;
   amount: number;
   status: ProjectStatus;
+  revision_limit: number;
+  revision_count: number;
+  extra_revisions_granted: number;
   delivery_url: string | null;
   revision_request: string | null;
   created_at: string;

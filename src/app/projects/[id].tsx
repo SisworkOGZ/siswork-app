@@ -79,6 +79,17 @@ export default function ProjectDetailScreen() {
           <Text style={styles.amount}>
             Rp{Number(project.amount).toLocaleString("id-ID")}
           </Text>
+          <Text style={styles.revisionAllowance}>
+            Revisi digunakan {project.revision_count} dari{" "}
+            {project.revision_limit + project.extra_revisions_granted}{" "}
+            revisi yang disepakati.
+          </Text>
+          {project.extra_revisions_granted > 0 && (
+            <Text style={styles.description}>
+              {project.extra_revisions_granted} revisi tambahan disepakati
+              langsung dengan seller.
+            </Text>
+          )}
           {!!project.description && (
             <Text style={styles.description}>{project.description}</Text>
           )}
@@ -114,6 +125,7 @@ const styles = StyleSheet.create({
   title: { color: "#172033", fontSize: 24, fontWeight: "800" },
   status: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 18, backgroundColor: "#EEF0FF", color: "#4356C5", fontSize: 11, fontWeight: "800" },
   amount: { color: "#172033", fontSize: 19, fontWeight: "800" },
+  revisionAllowance: { color: "#4356C5", fontSize: 13, fontWeight: "700" },
   description: { color: "#667085", fontSize: 14, lineHeight: 21 },
   revision: { padding: 13, borderRadius: 14, backgroundColor: "#FFF7E8", gap: 5 },
   revisionLabel: { color: "#9A5B00", fontSize: 12, fontWeight: "800" },

@@ -36,7 +36,7 @@ yarn-error.*
 !.env.*.example
 
 # local editor and MCP configuration
-.vscode/mcp.json
+.vscode
 
 # typescript
 *.tsbuildinfo

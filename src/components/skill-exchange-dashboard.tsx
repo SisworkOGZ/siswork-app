@@ -30,6 +30,7 @@ import {
   loadConversationMessages,
   loadMyConversations,
   markConversationRead,
+  createProjectInvoice,
   sendConversationMedia,
   sendConversationMessage,
   type ChatConversation,
@@ -257,6 +258,13 @@ export default function SisworkDashboard({
   const [isLoadingChats, setIsLoadingChats] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+  const [invoiceTitle, setInvoiceTitle] = useState("");
+  const [invoiceDescription, setInvoiceDescription] = useState("");
+  const [invoiceAmount, setInvoiceAmount] = useState("");
+  const [invoiceRevisionLimit, setInvoiceRevisionLimit] = useState("3");
+  const [invoiceError, setInvoiceError] = useState("");
   const [isSendingMedia, setIsSendingMedia] = useState(false);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const [chatError, setChatError] = useState("");
@@ -1070,6 +1078,56 @@ export default function SisworkDashboard({
       setIsSendingMessage(false);
     }
   };
+  const submitProjectInvoice = async () => {
+    const conversationId = selectedConversationId;
+    if (!conversationId || !chatUserId || isCreatingInvoice) return;
+
+    const normalizedAmount = invoiceAmount.replace(/[^\d]/g, "");
+    const amount = normalizedAmount ? Number(normalizedAmount) : Number.NaN;
+    setIsCreatingInvoice(true);
+    setInvoiceError("");
+    try {
+      await createProjectInvoice(
+        conversationId,
+        invoiceTitle,
+        invoiceDescription,
+        amount,
+        invoiceRevisionLimit.trim()
+          ? Number(invoiceRevisionLimit)
+          : Number.NaN,
+      );
+      const messages = await loadConversationMessages(conversationId, chatUserId);
+      const latestMessage = messages[messages.length - 1];
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                updatedAt: latestMessage?.time ?? conversation.updatedAt,
+                lastMessagePreview: latestMessage?.text ?? "Invoice proyek",
+                lastMessageIsMine: true,
+                unreadCount: 0,
+                messages,
+              }
+            : conversation,
+        ),
+      );
+      setInvoiceTitle("");
+      setInvoiceDescription("");
+      setInvoiceAmount("");
+      setInvoiceRevisionLimit("3");
+      setShowInvoiceForm(false);
+    } catch (error) {
+      console.error("Gagal membuat invoice proyek:", error);
+      setInvoiceError(
+        error instanceof Error
+          ? error.message
+          : "Invoice tidak dapat dibuat. Silakan coba lagi.",
+      );
+    } finally {
+      setIsCreatingInvoice(false);
+    }
+  };
   const sendChatAttachment = async () => {
     if (!selectedConversationId || !chatUserId || isSendingMedia) return;
     setChatError("");
@@ -1657,7 +1715,21 @@ export default function SisworkDashboard({
                 {selectedConversation.service}
               </Text>
             </View>
-            <Text style={styles.chatPreviewTag}>CHAT LANGSUNG</Text>
+            {selectedConversation.isSeller ? (
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => {
+                  setInvoiceError("");
+                  setInvoiceRevisionLimit("3");
+                  setShowInvoiceForm(true);
+                }}
+                style={styles.chatInvoiceButton}
+              >
+                <Text style={styles.chatInvoiceButtonText}>＋ Invoice</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.chatPreviewTag}>CHAT LANGSUNG</Text>
+            )}
           </View>
           {!!chatError && (
             <Text accessibilityRole="alert" style={styles.chatError}>
@@ -2182,6 +2254,126 @@ export default function SisworkDashboard({
                 ) : (
                   <Text style={styles.serviceFormSubmitText}>
                     Simpan & buat jasa pertama
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showInvoiceForm}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!isCreatingInvoice) setShowInvoiceForm(false);
+        }}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalBackdrop}
+        >
+          <View
+            style={[
+              styles.serviceFormSheet,
+              { paddingBottom: Math.max(insets.bottom, 18) },
+            ]}
+          >
+            <View style={styles.serviceFormHeader}>
+              <View>
+                <Text style={styles.eyebrow}>MULAI PROYEK</Text>
+                <Text style={styles.serviceFormTitle}>Buat invoice</Text>
+              </View>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Tutup formulir invoice"
+                disabled={isCreatingInvoice}
+                onPress={() => setShowInvoiceForm(false)}
+                style={styles.serviceFormCloseButton}
+              >
+                <Text style={styles.serviceFormClose}>×</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.serviceFormContent}
+            >
+              <Text style={styles.formLabel}>Judul proyek</Text>
+              <TextInput
+                accessibilityLabel="Judul proyek"
+                editable={!isCreatingInvoice}
+                maxLength={200}
+                onChangeText={setInvoiceTitle}
+                placeholder="Contoh: Desain poster acara"
+                placeholderTextColor="#929AAF"
+                style={styles.formInput}
+                value={invoiceTitle}
+              />
+              <Text style={styles.formLabel}>Deskripsi (opsional)</Text>
+              <TextInput
+                accessibilityLabel="Deskripsi proyek"
+                editable={!isCreatingInvoice}
+                maxLength={1000}
+                multiline
+                onChangeText={setInvoiceDescription}
+                placeholder="Rincian pekerjaan dan hasil yang disepakati"
+                placeholderTextColor="#929AAF"
+                style={[styles.formInput, styles.formDescriptionInput]}
+                textAlignVertical="top"
+                value={invoiceDescription}
+              />
+              <Text style={styles.formLabel}>Jumlah (Rupiah)</Text>
+              <TextInput
+                accessibilityLabel="Jumlah invoice dalam rupiah"
+                editable={!isCreatingInvoice}
+                keyboardType="number-pad"
+                onChangeText={(value) =>
+                  setInvoiceAmount(value.replace(/[^\d]/g, ""))
+                }
+                placeholder="Contoh: 50000"
+                placeholderTextColor="#929AAF"
+                style={styles.formInput}
+                value={invoiceAmount}
+              />
+              <Text style={styles.formLabel}>Batas revisi gratis</Text>
+              <TextInput
+                accessibilityLabel="Batas revisi gratis"
+                editable={!isCreatingInvoice}
+                keyboardType="number-pad"
+                maxLength={2}
+                onChangeText={(value) =>
+                  setInvoiceRevisionLimit(value.replace(/[^\d]/g, ""))
+                }
+                placeholder="3"
+                placeholderTextColor="#929AAF"
+                style={styles.formInput}
+                value={invoiceRevisionLimit}
+              />
+              <Text style={styles.formHint}>
+                Maksimal 20 kali. Revisi setelah batas ini perlu disepakati
+                dan dibayar langsung kepada seller sebelum dibuka.
+              </Text>
+              {!!invoiceError && (
+                <Text accessibilityRole="alert" style={styles.serviceFormError}>
+                  {invoiceError}
+                </Text>
+              )}
+              <TouchableOpacity
+                accessibilityRole="button"
+                disabled={isCreatingInvoice}
+                onPress={() => void submitProjectInvoice()}
+                style={[
+                  styles.sellerOnboardingSubmit,
+                  isCreatingInvoice && styles.serviceFormSubmitDisabled,
+                ]}
+              >
+                {isCreatingInvoice ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.serviceFormSubmitText}>
+                    Buat proyek & kirim invoice
                   </Text>
                 )}
               </TouchableOpacity>
@@ -3211,6 +3403,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#ECEFF5",
+  },
+  chatInvoiceButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#EEF0FF",
+  },
+  chatInvoiceButtonText: {
+    color: "#4356C5",
+    fontSize: 11,
+    fontWeight: "800",
   },
   chatServiceCopy: { flex: 1, marginRight: 8 },
   chatServiceEyebrow: {

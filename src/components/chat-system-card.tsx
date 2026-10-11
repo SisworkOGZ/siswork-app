@@ -15,6 +15,11 @@ export function ChatSystemCard({ invoice }: { invoice: InvoicePayload }) {
       <Text style={styles.amount}>
         Rp{invoice.amount.toLocaleString("id-ID")}
       </Text>
+      {invoice.revision_limit !== undefined && (
+        <Text style={styles.revisions}>
+          Termasuk {invoice.revision_limit} revisi gratis
+        </Text>
+      )}
       <Pressable
         accessibilityRole="button"
         onPress={() =>
@@ -45,6 +50,7 @@ const styles = StyleSheet.create({
   title: { color: "#172033", fontSize: 15, fontWeight: "700" },
   description: { color: "#64748B", fontSize: 12, lineHeight: 18 },
   amount: { color: "#4356C5", fontSize: 18, fontWeight: "800" },
+  revisions: { color: "#64748B", fontSize: 11 },
   button: {
     alignItems: "center",
     paddingVertical: 11,

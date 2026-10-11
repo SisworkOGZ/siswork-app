@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   ActivityIndicator,
   Pressable,
   ScrollView,
@@ -11,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   completeProject,
+  grantExtraProjectRevision,
   loadMyProjects,
   requestProjectRevision,
   submitProjectDelivery,
@@ -100,7 +102,8 @@ export default function ProjectsScreen() {
       <Text style={styles.eyebrow}>RUANG KERJA</Text>
       <Text style={styles.title}>Proyek</Text>
       <Text style={styles.subtitle}>
-        Pantau pekerjaan dan kirim hasil langsung di sini.
+        Batas revisi gratis ditentukan seller. Revisi tambahan perlu disepakati
+        dan dibayar langsung kepada seller.
       </Text>
 
       <View style={styles.segmentBar}>
@@ -142,6 +145,12 @@ export default function ProjectsScreen() {
                 </Text>
               </View>
               <Text style={styles.projectTitle}>{project.title}</Text>
+              <Text style={styles.revisionAllowance}>
+                Revisi digunakan: {project.revision_count} /{" "}
+                {project.revision_limit + project.extra_revisions_granted}
+                {" · "}
+                {project.extra_revisions_granted} tambahan
+              </Text>
               {!!project.description && (
                 <Text style={styles.description}>{project.description}</Text>
               )}
@@ -157,7 +166,10 @@ export default function ProjectsScreen() {
                 </Text>
               )}
 
-              {project.status !== "completed" && isSeller && (
+              {project.status !== "completed" &&
+                isSeller &&
+                (project.status === "in_progress" ||
+                  Boolean(project.revision_request)) && (
                 <View style={styles.actionGroup}>
                   <TextInput
                     accessibilityLabel="Tautan hasil kerja"
@@ -194,7 +206,59 @@ export default function ProjectsScreen() {
                 </View>
               )}
 
-              {project.status === "revision" && !isSeller && (
+              {project.status === "revision" &&
+                isSeller &&
+                !project.revision_request &&
+                project.revision_count >=
+                  project.revision_limit + project.extra_revisions_granted && (
+                  <View style={styles.actionGroup}>
+                    <Text style={styles.extraRevisionNotice}>
+                      Batas revisi telah digunakan. Setelah biaya tambahan
+                      disepakati dan dibayar di luar aplikasi, seller dapat
+                      membuka satu revisi tambahan.
+                    </Text>
+                    <Pressable
+                      disabled={isBusy}
+                      onPress={() =>
+                        Alert.alert(
+                          "Buka revisi tambahan?",
+                          "Pastikan biaya revisi tambahan sudah disepakati dan dibayar di luar aplikasi.",
+                          [
+                            { text: "Batal", style: "cancel" },
+                            {
+                              text: "Sudah disepakati",
+                              onPress: () =>
+                                void runProjectAction(project.id, async () => {
+                                  const extraRevisionsGranted =
+                                    await grantExtraProjectRevision(project.id);
+                                  return {
+                                    ...project,
+                                    extra_revisions_granted:
+                                      extraRevisionsGranted,
+                                    updated_at: new Date().toISOString(),
+                                  };
+                                }),
+                            },
+                          ],
+                        )
+                      }
+                      style={[
+                        styles.secondaryButton,
+                        isBusy && styles.disabled,
+                      ]}
+                    >
+                      <Text style={styles.secondaryButtonText}>
+                        {isBusy ? "Memproses..." : "Buka 1 revisi tambahan"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+
+              {project.status === "revision" &&
+                !isSeller &&
+                !project.revision_request &&
+                project.revision_count <
+                  project.revision_limit + project.extra_revisions_granted && (
                 <View style={styles.actionGroup}>
                   <TextInput
                     accessibilityLabel="Permintaan revisi"
@@ -225,7 +289,7 @@ export default function ProjectsScreen() {
                   >
                     <Text style={styles.secondaryButtonText}>Minta Revisi</Text>
                   </Pressable>
-                  {!!project.delivery_url && (
+                  {!!project.delivery_url && !project.revision_request && (
                     <Pressable
                       disabled={isBusy}
                       onPress={() =>
@@ -242,6 +306,25 @@ export default function ProjectsScreen() {
                   )}
                 </View>
               )}
+              {project.status === "revision" &&
+                !isSeller &&
+                project.revision_request && (
+                  <Text style={styles.extraRevisionNotice}>
+                    Permintaan revisi sudah dikirim. Menunggu seller mengirim
+                    hasil yang diperbarui.
+                  </Text>
+                )}
+              {project.status === "revision" &&
+                !isSeller &&
+                !project.revision_request &&
+                project.revision_count >=
+                  project.revision_limit + project.extra_revisions_granted && (
+                  <Text style={styles.extraRevisionNotice}>
+                    Batas revisi gratis telah habis. Hubungi seller untuk
+                    menyepakati biaya tambahan; seller harus membuka revisi
+                    tambahan setelah pembayaran disepakati.
+                  </Text>
+                )}
             </View>
           );
         })
@@ -275,10 +358,12 @@ const styles = StyleSheet.create({
   cardStatus: { color: "#4356C5", backgroundColor: "#EEF0FF", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, fontSize: 10, fontWeight: "800" },
   amount: { color: "#172033", fontSize: 13, fontWeight: "800" },
   projectTitle: { color: "#172033", fontSize: 17, fontWeight: "800" },
+  revisionAllowance: { color: "#667085", fontSize: 12, fontWeight: "600" },
   description: { color: "#667085", fontSize: 13, lineHeight: 19 },
   revisionCard: { padding: 12, borderRadius: 13, backgroundColor: "#FFF7E8", gap: 4 },
   revisionTitle: { color: "#9A5B00", fontSize: 11, fontWeight: "800" },
   revisionText: { color: "#6E4A1D", fontSize: 13, lineHeight: 19 },
+  extraRevisionNotice: { color: "#6E4A1D", backgroundColor: "#FFF7E8", padding: 12, borderRadius: 12, fontSize: 12, lineHeight: 18 },
   delivery: { color: "#4356C5", fontSize: 12, lineHeight: 18 },
   actionGroup: { gap: 9, marginTop: 3 },
   input: { minHeight: 46, paddingHorizontal: 13, borderWidth: 1, borderColor: "#DDE2EE", borderRadius: 12, color: "#172033", fontSize: 13 },
