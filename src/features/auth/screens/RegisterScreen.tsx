@@ -16,6 +16,8 @@ import {
 } from "react-native";
 import { isSupabaseConfigured, supabase } from "@/core/services/supabase";
 import { saveStudentRegistration } from "@/core/services/student-registration";
+import { AppColors } from "@/constants/app-theme";
+import { SisworkLogo } from "@/components/siswork-logo";
 
 interface RegisterFormData {
   nisn: string;
@@ -237,6 +239,7 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.card}>
+            <SisworkLogo size={32} style={styles.brandLogo} />
             <Text style={styles.title}>Registrasi Akun Siswa</Text>
             <Text style={styles.subtitle}>
               Masukkan NISN untuk memverifikasi data siswa.
@@ -256,7 +259,7 @@ export default function RegisterScreen() {
               />
               {isValidatingNisn && (
                 <View style={styles.statusRow}>
-                  <ActivityIndicator size="small" color="#2563EB" />
+                  <ActivityIndicator size="small" color={AppColors.brand} />
                   <Text style={styles.infoText}>Memeriksa NISN...</Text>
                 </View>
               )}
@@ -342,6 +345,9 @@ export default function RegisterScreen() {
             <View style={styles.termsRow}>
               <Switch
                 value={formData.acceptTerms}
+                trackColor={{ false: "#D5D9E2", true: AppColors.brand }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel="Konfirmasi data siswa sudah benar"
                 onValueChange={(acceptTerms) =>
                   updateFormField("acceptTerms", acceptTerms)
                 }
@@ -391,7 +397,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F9FC",
+    backgroundColor: AppColors.canvas,
   },
   scrollContent: {
     flexGrow: 1,
@@ -401,28 +407,35 @@ const styles = StyleSheet.create({
   card: {
     alignSelf: "center",
     width: "100%",
-    maxWidth: 480,
+    maxWidth: 520,
     padding: 24,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    backgroundColor: AppColors.surface,
     elevation: 3,
-    shadowColor: "#1A1D1E",
+    shadowColor: AppColors.ink,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
   },
   title: {
+    marginTop: 4,
     marginBottom: 8,
-    color: "#1A1D1E",
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
+    color: AppColors.ink,
+    fontSize: 26,
+    fontWeight: "800",
+    textAlign: "left",
+  },
+  brandLogo: {
+    marginBottom: 16,
   },
   subtitle: {
     marginBottom: 24,
-    color: "#6C757D",
+    color: AppColors.muted,
     fontSize: 14,
-    textAlign: "center",
+    lineHeight: 21,
+    textAlign: "left",
   },
   formGroup: {
     marginBottom: 16,
@@ -438,11 +451,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "#D9E0E8",
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    color: "#1A1D1E",
-    fontSize: 15,
+    borderColor: AppColors.border,
+    borderRadius: 12,
+    backgroundColor: AppColors.surface,
+    color: AppColors.ink,
+    fontSize: 16,
   },
   readOnlyInput: {
     backgroundColor: "#EEF2F5",
@@ -455,7 +468,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   infoText: {
-    color: "#2563EB",
+    color: AppColors.brand,
     fontSize: 12,
   },
   successText: {
@@ -477,20 +490,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "#D9E0E8",
+    borderColor: AppColors.border,
     borderRadius: 20,
     backgroundColor: "#FFFFFF",
   },
   classOptionSelected: {
-    borderColor: "#2563EB",
-    backgroundColor: "#EFF6FF",
+    borderColor: AppColors.brand,
+    backgroundColor: AppColors.brandTint,
   },
   classOptionText: {
     color: "#4B5563",
     fontSize: 13,
   },
   classOptionTextSelected: {
-    color: "#1D4ED8",
+    color: AppColors.brand,
     fontWeight: "600",
   },
   disabledControl: {
@@ -513,7 +526,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
-    backgroundColor: "#2563EB",
+    backgroundColor: AppColors.brand,
   },
   buttonDisabled: {
     backgroundColor: "#93C5FD",
@@ -529,7 +542,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   loginLinkText: {
-    color: "#2563EB",
+    color: AppColors.brand,
     fontSize: 14,
     fontWeight: "600",
   },

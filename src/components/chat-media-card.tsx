@@ -1,5 +1,6 @@
 import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import type { MediaMessagePayload } from "@/core/types/communication";
+import { AppColors } from "@/constants/app-theme";
 
 export function ChatMediaCard({ media }: { media: MediaMessagePayload }) {
   const isImage = media.mime_type.startsWith("image/");
@@ -36,18 +37,18 @@ const styles = StyleSheet.create({
     width: 240,
     overflow: "hidden",
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: AppColors.surface,
     borderWidth: 1,
-    borderColor: "#E3E7F0",
+    borderColor: AppColors.border,
   },
   image: { width: "100%", height: 150, backgroundColor: "#EEF0F5" },
   fileIcon: {
     height: 90,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EEF0FF",
+    backgroundColor: AppColors.brandTint,
   },
-  fileIconText: { color: "#4356C5", fontSize: 30, fontWeight: "700" },
-  name: { paddingHorizontal: 12, paddingTop: 10, color: "#172033", fontSize: 12, fontWeight: "700" },
-  hint: { paddingHorizontal: 12, paddingBottom: 10, paddingTop: 3, color: "#667085", fontSize: 10 },
+  fileIconText: { color: AppColors.brand, fontSize: 30, fontWeight: "700" },
+  name: { paddingHorizontal: 12, paddingTop: 10, color: AppColors.ink, fontSize: 14, fontWeight: "700" },
+  hint: { paddingHorizontal: 12, paddingBottom: 10, paddingTop: 3, color: AppColors.muted, fontSize: 12 },
 });

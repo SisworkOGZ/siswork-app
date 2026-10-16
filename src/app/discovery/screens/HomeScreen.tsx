@@ -1,5 +1,5 @@
-import SisworkDashboard from "@/components/skill-exchange-dashboard";
+import { Redirect } from "expo-router";
 
-export default function HomeScreen() {
-  return <SisworkDashboard />;
+export default function LegacyHomeRoute() {
+  return <Redirect href="/(tabs)" />;
 }

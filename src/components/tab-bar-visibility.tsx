@@ -10,6 +10,8 @@ import {
 type TabBarVisibilityContextValue = {
   isTabBarHidden: boolean;
   setTabBarHidden: (hidden: boolean) => void;
+  selectedConversationId: string | null;
+  setSelectedConversationId: (conversationId: string | null) => void;
 };
 
 const TabBarVisibilityContext =
@@ -17,12 +19,25 @@ const TabBarVisibilityContext =
 
 export function TabBarVisibilityProvider({ children }: PropsWithChildren) {
   const [isTabBarHidden, setIsTabBarHidden] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const setTabBarHidden = useCallback((hidden: boolean) => {
     setIsTabBarHidden(hidden);
   }, []);
   const value = useMemo(
-    () => ({ isTabBarHidden, setTabBarHidden }),
-    [isTabBarHidden, setTabBarHidden],
+    () => ({
+      isTabBarHidden,
+      setTabBarHidden,
+      selectedConversationId,
+      setSelectedConversationId,
+    }),
+    [
+      isTabBarHidden,
+      setTabBarHidden,
+      selectedConversationId,
+      setSelectedConversationId,
+    ],
   );
 
   return (

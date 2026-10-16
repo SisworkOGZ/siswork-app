@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { InvoicePayload } from "@/core/types/communication";
+import { AppColors } from "@/constants/app-theme";
 
 export function ChatSystemCard({ invoice }: { invoice: InvoicePayload }) {
   const router = useRouter();
@@ -14,6 +15,9 @@ export function ChatSystemCard({ invoice }: { invoice: InvoicePayload }) {
       )}
       <Text style={styles.amount}>
         Rp{invoice.amount.toLocaleString("id-ID")}
+      </Text>
+      <Text style={styles.paymentNote}>
+        Pembayaran disepakati dan dilakukan langsung di luar aplikasi.
       </Text>
       {invoice.revision_limit !== undefined && (
         <Text style={styles.revisions}>
@@ -42,21 +46,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#DDE3F3",
-    backgroundColor: "#FFFFFF",
+    borderColor: AppColors.border,
+    backgroundColor: AppColors.surface,
     gap: 8,
   },
-  eyebrow: { color: "#64748B", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
-  title: { color: "#172033", fontSize: 15, fontWeight: "700" },
-  description: { color: "#64748B", fontSize: 12, lineHeight: 18 },
-  amount: { color: "#4356C5", fontSize: 18, fontWeight: "800" },
-  revisions: { color: "#64748B", fontSize: 11 },
+  eyebrow: { color: AppColors.muted, fontSize: 11, fontWeight: "800", letterSpacing: 1 },
+  title: { color: AppColors.ink, fontSize: 15, fontWeight: "700" },
+  description: { color: AppColors.muted, fontSize: 13, lineHeight: 19 },
+  amount: { color: AppColors.brand, fontSize: 18, fontWeight: "800" },
+  paymentNote: { color: AppColors.muted, fontSize: 12, lineHeight: 17 },
+  revisions: { color: AppColors.muted, fontSize: 12 },
   button: {
     alignItems: "center",
     paddingVertical: 11,
     borderRadius: 12,
-    backgroundColor: "#4356C5",
+    backgroundColor: AppColors.brand,
   },
   pressed: { opacity: 0.8 },
-  buttonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
+  buttonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
 });

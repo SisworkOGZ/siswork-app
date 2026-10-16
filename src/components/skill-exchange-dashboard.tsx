@@ -17,6 +17,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/core/services/supabase";
 import { useTabBarVisibility } from "@/components/tab-bar-visibility";
+import { AppColors } from "@/constants/app-theme";
+import { SisworkLogo } from "@/components/siswork-logo";
 import { ChatSystemCard } from "@/components/chat-system-card";
 import { ChatMediaCard } from "@/components/chat-media-card";
 import {
@@ -76,118 +78,6 @@ type StudentProfile = {
 
 const categories = ["Semua", "Desain", "Website", "Video", "Menulis", "Tutor"];
 const serviceCategories = ["Desain", "Website", "Video", "Menulis", "Tutor"];
-const services: Service[] = [
-  {
-    id: "design",
-    title: "Desain poster acara sekolah",
-    category: "Desain",
-    talent: "Nafilah Linanti",
-    initials: "NL",
-    school: "SMK Negeri 1 Wanayasa",
-    price: 25000,
-    rating: "4.9",
-    reviews: 18,
-    range: "Online",
-    location: "Wanayasa",
-    color: "#EEEAFE",
-    symbol: "✳",
-    description:
-      "Poster digital siap cetak untuk acara sekolah, organisasi, dan kebutuhan promosi. Termasuk dua kali revisi.",
-    estimatedDays: 3,
-    isActive: true,
-  },
-  {
-    id: "web",
-    title: "Bikin website profil sederhana",
-    category: "Website",
-    talent: "Arrazy Kusuma Putra Pradita",
-    initials: "AK",
-    school: "SMK Negeri 1 Wanayasa",
-    price: 75000,
-    rating: "5.0",
-    reviews: 12,
-    range: "Online",
-    location: "Wanayasa",
-    color: "#E2F4EC",
-    symbol: "⌘",
-    description:
-      "Website profil atau portofolio responsif untuk tugas, ekstrakurikuler, dan usaha kecil.",
-    estimatedDays: 7,
-    isActive: true,
-  },
-  {
-    id: "video",
-    title: "Edit video konten pendek",
-    category: "Video",
-    talent: "Vika Diah Febriyanti",
-    initials: "VD",
-    school: "SMK Negeri 1 Wanayasa",
-    price: 30000,
-    rating: "4.8",
-    reviews: 9,
-    range: "Lokal",
-    location: "Purwakarta",
-    color: "#FFF0E3",
-    symbol: "▶",
-    description:
-      "Editing video Reels, TikTok, atau dokumentasi kegiatan. Bisa diskusi langsung di area Purwakarta.",
-    estimatedDays: 4,
-    isActive: true,
-  },
-  {
-    id: "tutor",
-    title: "Bimbingan matematika SMP",
-    category: "Tutor",
-    talent: "Irmatiana Asti",
-    initials: "IA",
-    school: "SMK Negeri 1 Wanayasa",
-    price: 20000,
-    rating: "4.9",
-    reviews: 15,
-    range: "Lokal",
-    location: "Wanayasa",
-    color: "#E6F1FF",
-    symbol: "∑",
-    description:
-      "Belajar privat santai untuk memahami konsep dan latihan soal matematika SMP.",
-    estimatedDays: 1,
-    isActive: true,
-  },
-  {
-    id: "writing",
-    title: "Rapikan dokumen dan presentasi",
-    category: "Menulis",
-    talent: "Nafilah Linanti",
-    initials: "NL",
-    school: "SMK Negeri 1 Wanayasa",
-    price: 15000,
-    rating: "4.7",
-    reviews: 7,
-    range: "Online",
-    location: "Wanayasa",
-    color: "#FCE8F0",
-    symbol: "▤",
-    description:
-      "Bantu merapikan dokumen tugas atau membuat presentasi yang rapi dan mudah dipahami.",
-    estimatedDays: 2,
-    isActive: true,
-  },
-];
-const requests = [
-  {
-    title: "Butuh desain logo untuk ekskul",
-    category: "Desain",
-    budget: "Rp30–50 ribu",
-    time: "2 jam lalu",
-  },
-  {
-    title: "Cari tutor Fisika kelas 10",
-    category: "Tutor",
-    budget: "Bisa diskusi",
-    time: "5 jam lalu",
-  },
-];
-
 const rupiah = (value: number) => `Rp${value.toLocaleString("id-ID")}`;
 
 export default function SisworkDashboard({
@@ -234,10 +124,7 @@ export default function SisworkDashboard({
   const [serviceMutationError, setServiceMutationError] = useState("");
   const [portfolioCreateRequest, setPortfolioCreateRequest] = useState(0);
   const handledExternalActionId = useRef<string | undefined>(undefined);
-  const allServices = useMemo(() => {
-    const publishedIds = new Set(publishedServices.map((service) => service.id));
-    return [...publishedServices, ...services.filter((service) => !publishedIds.has(service.id))];
-  }, [publishedServices]);
+  const allServices = publishedServices;
   const [saved, setSaved] = useState<string[]>([]);
   const [detail, setDetail] = useState<Service | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -268,16 +155,42 @@ export default function SisworkDashboard({
   const [isSendingMedia, setIsSendingMedia] = useState(false);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const [chatError, setChatError] = useState("");
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null);
   const [chatSearch, setChatSearch] = useState("");
   const [chatFilter, setChatFilter] = useState<"Semua" | "Belum dibaca">(
     "Semua",
   );
   const [draftMessage, setDraftMessage] = useState("");
   const insets = useSafeAreaInsets();
-  const { setTabBarHidden } = useTabBarVisibility();
+  const {
+    setTabBarHidden,
+    selectedConversationId,
+    setSelectedConversationId,
+  } = useTabBarVisibility();
+
+  const openDashboardTab = (nextTab: Tab) => {
+    if (!hideTabBar) {
+      setTab(nextTab);
+      return;
+    }
+
+    switch (nextTab) {
+      case "Beranda":
+        router.navigate("/(tabs)");
+        break;
+      case "Chat":
+        router.navigate("/(tabs)/chat");
+        break;
+      case "Cari":
+        router.navigate("/(tabs)/explore");
+        break;
+      case "Pesanan Saya":
+        router.navigate("/(tabs)/orders");
+        break;
+      case "Profil":
+        router.navigate("/(tabs)/profile");
+        break;
+    }
+  };
 
   const logout = async () => {
     if (isLoggingOut) return;
@@ -638,11 +551,6 @@ export default function SisworkDashboard({
         ? current.filter((item) => item !== id)
         : [...current, id],
     );
-  const demoNotice = (title: string) =>
-    Alert.alert(
-      title,
-      "Fitur ini masih berupa rancangan UI dan akan dihubungkan pada tahap backend.",
-    );
   const prepareServiceForm = (
     initialCategory = "Desain",
     service: Service | null = null,
@@ -660,7 +568,7 @@ export default function SisworkDashboard({
   };
   const openServiceForm = () => {
     if (!profile) {
-      setTab("Profil");
+      openDashboardTab("Profil");
       if (!isLoadingProfile) {
         Alert.alert(
           "Profil belum siap",
@@ -1012,7 +920,7 @@ export default function SisworkDashboard({
       );
       setSelectedConversationId(conversationId);
       setDetail(null);
-      setTab("Chat");
+      openDashboardTab("Chat");
     } catch (error) {
       console.error("Gagal memulai percakapan:", error);
       Alert.alert(
@@ -1357,20 +1265,9 @@ export default function SisworkDashboard({
     <>
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.brand}>
-            <Text style={styles.brandBadge}>S</Text>
-            <Text style={styles.brandAccent}>iswork</Text>
-          </Text>
+          <SisworkLogo size={30} />
           <Text style={styles.brandTagline}>Ruang kolaborasi pelajar</Text>
         </View>
-        <TouchableOpacity
-          style={styles.notification}
-          onPress={() => demoNotice("Notifikasi")}
-          accessibilityLabel="Notifikasi"
-        >
-          <Text style={styles.notificationIcon}>♧</Text>
-          <View style={styles.notificationDot} />
-        </TouchableOpacity>
       </View>
       <View style={styles.welcome}>
         <Text style={styles.greeting}>Halo, Pelajar! 👋</Text>
@@ -1381,7 +1278,7 @@ export default function SisworkDashboard({
       <SearchBox
         value={query}
         onChange={setQuery}
-        onFocus={() => setTab("Cari")}
+        onFocus={() => openDashboardTab("Cari")}
         placeholder="Cari jasa, keahlian, atau talent..."
       />
       <View style={styles.hero}>
@@ -1405,7 +1302,7 @@ export default function SisworkDashboard({
         "Talent pilihan",
         "Karya terbaik dari teman pelajar",
         "Lihat semua",
-        () => setTab("Cari"),
+        () => openDashboardTab("Cari"),
       )}
       {reachFilters()}
       {!!serviceLoadError && (
@@ -1418,34 +1315,8 @@ export default function SisworkDashboard({
           {filteredServices.slice(0, 3).map(serviceCard)}
         </View>
       ) : (
-        <EmptyState text="Belum ada jasa yang cocok. Coba filter lainnya." />
+        <EmptyState text="Belum ada jasa aktif di komunitas sekolahmu. Coba lagi nanti atau tawarkan keahlianmu." />
       )}
-      {sectionHeading(
-        "Request board",
-        "Kebutuhan jasa dari komunitas",
-        "+ Buat",
-        () => demoNotice("Buat request"),
-      )}
-      {requests.map((request) => (
-        <TouchableOpacity
-          key={request.title}
-          style={styles.requestCard}
-          onPress={() => demoNotice("Kirim penawaran")}
-        >
-          <View style={styles.requestIcon}>
-            <Text style={styles.requestIconText}>↗</Text>
-          </View>
-          <View style={styles.requestDetails}>
-            <Text style={styles.requestTitle}>{request.title}</Text>
-            <Text style={styles.requestMeta}>
-              {request.category} · {request.time}
-            </Text>
-            <Text style={styles.requestBudget}>{request.budget}</Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </TouchableOpacity>
-      ))}
-      <Text style={styles.demoNote}>Pratinjau UI · data contoh</Text>
     </>
   );
 
@@ -1478,7 +1349,7 @@ export default function SisworkDashboard({
           {filteredServices.map(serviceCard)}
         </View>
       ) : (
-        <EmptyState text="Jasa belum ditemukan. Ubah kata kunci atau filter." />
+        <EmptyState text="Tidak ada jasa yang cocok. Ubah kata kunci atau filter, atau hapus filter untuk melihat semua jasa aktif." />
       )}
     </>
   );
@@ -1537,21 +1408,6 @@ export default function SisworkDashboard({
           </>
         )}
       </View>
-      {profile?.isSeller && (
-        <View style={styles.sellerBalanceCard}>
-          <View style={styles.sellerBalanceIcon}>
-            <Text style={styles.sellerBalanceIconText}>Rp</Text>
-          </View>
-          <View style={styles.sellerBalanceInfo}>
-            <Text style={styles.sellerBalanceLabel}>Saldo seller</Text>
-            <Text style={styles.sellerBalanceAmount}>{rupiah(0)}</Text>
-            <Text style={styles.sellerBalanceCaption}>
-              Saldo dari pesanan yang telah selesai
-            </Text>
-          </View>
-          <Text style={styles.sellerBalanceArrow}>›</Text>
-        </View>
-      )}
       <PortfolioSection
         ownerId={profile?.id ?? null}
         schoolId={profile?.schoolId ?? null}
@@ -1629,21 +1485,36 @@ export default function SisworkDashboard({
         <Text style={styles.orderGlyph}>◷</Text>
         <Text style={styles.orderEmptyTitle}>
           {orderSegment === "Dipesan"
-            ? "Belum ada jasa yang dipesan"
-            : "Belum ada pesanan masuk"}
+            ? "Pesanan dikelola di Proyek"
+            : "Penjualan dikelola di Proyek"}
         </Text>
         <Text style={styles.orderEmptyDescription}>
           {orderSegment === "Dipesan"
-            ? "Pesanan yang kamu buat akan muncul di sini."
-            : "Saat klien memesan jasamu, detail pesanan akan muncul di sini."}
+            ? "Setelah seller mengirim invoice lewat Chat, status pekerjaan dan hasilnya bisa kamu lihat di Proyek."
+            : "Proyek dari invoice yang kamu kirim lewat Chat, termasuk permintaan revisi buyer, bisa kamu kelola di Proyek."}
         </Text>
-        {orderSegment === "Dipesan" && (
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => router.navigate("/(tabs)/projects")}
+          style={styles.orderBrowseButton}
+        >
+          <Text style={styles.orderBrowseButtonText}>Buka Proyek</Text>
+        </TouchableOpacity>
+        {orderSegment === "Dipesan" ? (
           <TouchableOpacity
             accessibilityRole="button"
-            onPress={() => setTab("Cari")}
+            onPress={() => openDashboardTab("Cari")}
             style={styles.orderBrowseButton}
           >
             <Text style={styles.orderBrowseButtonText}>Cari jasa</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => openDashboardTab("Profil")}
+            style={styles.orderBrowseButton}
+          >
+            <Text style={styles.orderBrowseButtonText}>Kelola jasa</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -1876,7 +1747,7 @@ export default function SisworkDashboard({
           <TouchableOpacity
             accessibilityLabel="Buat pesan baru"
             onPress={() => {
-              setTab("Cari");
+              openDashboardTab("Cari");
               setSelectedConversationId(null);
             }}
             style={styles.chatNewButton}
@@ -2012,7 +1883,7 @@ export default function SisworkDashboard({
               </Text>
               {chatFilter === "Semua" && (
                 <TouchableOpacity
-                  onPress={() => setTab("Cari")}
+                  onPress={() => openDashboardTab("Cari")}
                   style={styles.chatBrowseButton}
                 >
                   <Text style={styles.chatBrowseButtonText}>Cari jasa</Text>
@@ -2027,7 +1898,7 @@ export default function SisworkDashboard({
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F7F8FC" />
+      <StatusBar barStyle="dark-content" backgroundColor={AppColors.canvas} />
       {tab === "Chat" && selectedConversation ? (
         chatContent()
       ) : (
@@ -2300,7 +2171,12 @@ export default function SisworkDashboard({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.serviceFormContent}
             >
-              <Text style={styles.formLabel}>Judul proyek</Text>
+                <Text style={styles.formHint}>
+                  Pastikan buyer menyetujui lingkup dan jumlahnya sebelum lanjut.
+                  Proyek langsung dibuat, tetapi pembayaran dilakukan di luar
+                  aplikasi.
+                </Text>
+                <Text style={styles.formLabel}>Judul proyek</Text>
               <TextInput
                 accessibilityLabel="Judul proyek"
                 editable={!isCreatingInvoice}
@@ -2748,7 +2624,7 @@ export default function SisworkDashboard({
               {settingsDetail === "privacy"
                 ? "Data profil dan percakapan digunakan untuk menjalankan layanan Siswork. Percakapan hanya dapat diakses oleh pesertanya. Gunakan Keluar dari akun untuk mengakhiri sesi pada perangkat ini."
                 : settingsDetail === "help"
-                ? "Cari jasa yang kamu butuhkan, gunakan Chat untuk menghubungi pelajar lain, dan buka Pesanan Saya untuk melihat pesanan. Jika ingin menjual jasa, pilih Mulai Berjualan dari Profil."
+                ? "Cari jasa yang kamu butuhkan, gunakan Chat untuk menghubungi pelajar lain, dan buka Proyek untuk memantau pesanan atau penjualan. Jika ingin menjual jasa, pilih Mulai Berjualan dari Profil."
                   : "Siswork membantu pelajar menemukan jasa dan menawarkan keahlian dalam satu komunitas. Versi aplikasi 1.0.0."}
             </Text>
             <TouchableOpacity
@@ -2877,7 +2753,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F7F8FC" },
+  screen: { flex: 1, backgroundColor: AppColors.canvas },
   scrollContent: { alignItems: "center" },
   content: { width: "100%", maxWidth: 560, paddingHorizontal: 20 },
   topBar: {
@@ -2885,42 +2761,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  brand: {
-    color: "#202B42",
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: -0.8,
-  },
-  brandBadge: {
-    color: "#FFFFFF",
-    backgroundColor: "#4356C5",
-    overflow: "hidden",
-    borderRadius: 7,
-    paddingHorizontal: 6,
-  },
-  brandAccent: { color: "#4356C5" },
-  brandTagline: { color: "#8992A5", fontSize: 9, marginTop: 4 },
-  notification: {
-    position: "relative",
-    width: 42,
-    height: 42,
-    borderRadius: 15,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#ECEFF5",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  notificationIcon: { color: "#38445C", fontSize: 21 },
-  notificationDot: {
-    position: "absolute",
-    right: 8,
-    top: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#ED8978",
-  },
+  brandTagline: { color: "#8992A5", fontSize: 12, marginTop: 4 },
   welcome: { marginTop: 23 },
   greeting: {
     color: "#202B42",
@@ -2928,7 +2769,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
   },
-  welcomeSubtitle: { color: "#7F899E", fontSize: 11, marginTop: 5 },
+  welcomeSubtitle: { color: "#7F899E", fontSize: 12, marginTop: 5 },
   searchBox: {
     height: 50,
     flexDirection: "row",
@@ -2941,7 +2782,7 @@ const styles = StyleSheet.create({
     borderColor: "#ECEFF5",
   },
   searchGlyph: { color: "#7C87A0", fontSize: 23, marginRight: 8 },
-  searchInput: { flex: 1, color: "#253149", fontSize: 11, paddingVertical: 0 },
+  searchInput: { flex: 1, color: "#253149", fontSize: 12, paddingVertical: 0 },
   clearSearch: { color: "#7D879A", fontSize: 22 },
   hero: {
     minHeight: 184,
@@ -2962,7 +2803,7 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     color: "#D2DAFF",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.4,
   },
@@ -2974,7 +2815,7 @@ const styles = StyleSheet.create({
     lineHeight: 27,
     marginTop: 10,
   },
-  heroDescription: { color: "#DFE4FF", fontSize: 10, marginTop: 6 },
+  heroDescription: { color: "#DFE4FF", fontSize: 12, marginTop: 6 },
   heroButton: {
     alignSelf: "flex-start",
     marginTop: 13,
@@ -2983,7 +2824,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
   },
-  heroButtonText: { color: "#354BB6", fontSize: 10, fontWeight: "800" },
+  heroButtonText: { color: "#354BB6", fontSize: 12, fontWeight: "800" },
   heroDecoration: {
     position: "absolute",
     right: 17,
@@ -2999,8 +2840,8 @@ const styles = StyleSheet.create({
     marginBottom: 11,
   },
   sectionTitle: { color: "#27324A", fontSize: 15, fontWeight: "800" },
-  sectionSubtitle: { color: "#939BAD", fontSize: 9, marginTop: 4 },
-  link: { color: "#4356C5", fontSize: 10, fontWeight: "800" },
+  sectionSubtitle: { color: "#939BAD", fontSize: 12, marginTop: 4 },
+  link: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
   chips: { gap: 7, paddingBottom: 2 },
   chip: {
     paddingHorizontal: 14,
@@ -3011,7 +2852,7 @@ const styles = StyleSheet.create({
     borderColor: "#E9ECF3",
   },
   chipActive: { backgroundColor: "#4356C5", borderColor: "#4356C5" },
-  chipText: { color: "#6E788D", fontSize: 9, fontWeight: "700" },
+  chipText: { color: "#6E788D", fontSize: 12, fontWeight: "700" },
   chipTextActive: { color: "#FFFFFF" },
   reachFilters: { flexDirection: "row", gap: 7, marginBottom: 10 },
   reachChip: {
@@ -3023,7 +2864,7 @@ const styles = StyleSheet.create({
     borderColor: "#ECEFF5",
   },
   reachChipActive: { backgroundColor: "#E9EDFF", borderColor: "#DCE2FF" },
-  reachChipText: { color: "#7F899B", fontSize: 9, fontWeight: "700" },
+  reachChipText: { color: "#7F899B", fontSize: 12, fontWeight: "700" },
   reachChipTextActive: { color: "#4356C5" },
   serviceList: { gap: 11 },
   serviceCard: {
@@ -3049,7 +2890,7 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     backgroundColor: "rgba(255,255,255,0.88)",
   },
-  serviceCategoryText: { color: "#4254B2", fontSize: 8, fontWeight: "800" },
+  serviceCategoryText: { color: "#4254B2", fontSize: 12, fontWeight: "800" },
   saveButton: {
     position: "absolute",
     right: 9,
@@ -3066,7 +2907,7 @@ const styles = StyleSheet.create({
   serviceInfo: { padding: 12 },
   serviceTitle: {
     color: "#29344B",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "800",
     lineHeight: 17,
   },
@@ -3078,11 +2919,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarInitials: { color: "#4356B2", fontSize: 8, fontWeight: "800" },
+  avatarInitials: { color: "#4356B2", fontSize: 12, fontWeight: "800" },
   talentDetails: { flex: 1, marginLeft: 8 },
-  talentName: { color: "#4B566C", fontSize: 9, fontWeight: "700" },
-  school: { color: "#9AA2B1", fontSize: 7, marginTop: 3 },
-  rating: { color: "#D39433", fontSize: 9, fontWeight: "800" },
+  talentName: { color: "#4B566C", fontSize: 12, fontWeight: "700" },
+  school: { color: "#9AA2B1", fontSize: 12, marginTop: 3 },
+  rating: { color: "#D39433", fontSize: 12, fontWeight: "800" },
   serviceFooter: {
     marginTop: 10,
     paddingTop: 9,
@@ -3092,47 +2933,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  price: { color: "#27324A", fontSize: 12, fontWeight: "800" },
-  priceNote: { color: "#9AA2B1", fontSize: 8, fontWeight: "500" },
-  rangeText: { color: "#818B9E", fontSize: 9 },
-  requestCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 11,
-    borderRadius: 15,
-    marginBottom: 8,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#EDF0F5",
-  },
-  requestIcon: {
-    width: 37,
-    height: 37,
-    borderRadius: 12,
-    backgroundColor: "#FFF2E7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  requestIconText: { color: "#D58B42", fontSize: 17, fontWeight: "700" },
-  requestDetails: { flex: 1, marginLeft: 9 },
-  requestTitle: { color: "#303B52", fontSize: 9, fontWeight: "800" },
-  requestMeta: { color: "#929BAD", fontSize: 8, marginTop: 4 },
-  requestBudget: {
-    color: "#485CC0",
-    fontSize: 9,
-    fontWeight: "700",
-    marginTop: 4,
-  },
-  chevron: { color: "#9AA3B4", fontSize: 22 },
-  demoNote: {
-    color: "#ADB4C1",
-    fontSize: 8,
-    textAlign: "center",
-    marginVertical: 10,
-  },
+  price: { color: "#27324A", fontSize: 14, fontWeight: "800" },
+  priceNote: { color: "#9AA2B1", fontSize: 12, fontWeight: "500" },
+  rangeText: { color: "#818B9E", fontSize: 12 },
   eyebrow: {
     color: "#818BA0",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.4,
     marginBottom: 7,
@@ -3143,17 +2949,17 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.6,
   },
-  pageSubtitle: { color: "#838DA1", fontSize: 10, marginTop: 5 },
+  pageSubtitle: { color: "#838DA1", fontSize: 12, marginTop: 5 },
   filterLabel: {
     color: "#303B52",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     marginTop: 21,
     marginBottom: 9,
   },
   resultCount: {
     color: "#818A9E",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "700",
     marginTop: 20,
     marginBottom: 10,
@@ -3163,7 +2969,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF0F1",
     borderRadius: 10,
     padding: 11,
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 15,
     marginBottom: 10,
   },
@@ -3179,7 +2985,7 @@ const styles = StyleSheet.create({
   emptyText: {
     color: "#838DA1",
     textAlign: "center",
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 16,
     marginTop: 8,
   },
@@ -3207,7 +3013,7 @@ const styles = StyleSheet.create({
   },
   chatPreviewNoticeText: {
     color: "#6875B8",
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 15,
     textAlign: "center",
   },
@@ -3217,7 +3023,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 11,
     paddingVertical: 9,
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 15,
     marginBottom: 10,
   },
@@ -3236,7 +3042,7 @@ const styles = StyleSheet.create({
   chatSearchInput: {
     flex: 1,
     color: "#253149",
-    fontSize: 13,
+    fontSize: 14,
     paddingVertical: 0,
   },
   chatSearchClear: { color: "#7D879A", fontSize: 21 },
@@ -3255,7 +3061,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4356C5",
     borderColor: "#4356C5",
   },
-  chatFilterText: { color: "#6E788D", fontSize: 11, fontWeight: "700" },
+  chatFilterText: { color: "#6E788D", fontSize: 12, fontWeight: "700" },
   chatFilterTextActive: { color: "#FFFFFF" },
   chatConversationList: {
     marginTop: 7,
@@ -3281,7 +3087,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  chatAvatarText: { color: "#4356B2", fontSize: 12, fontWeight: "800" },
+  chatAvatarText: { color: "#4356B2", fontSize: 14, fontWeight: "800" },
   chatConversationContent: { flex: 1, marginLeft: 11 },
   chatConversationTop: {
     flexDirection: "row",
@@ -3292,13 +3098,13 @@ const styles = StyleSheet.create({
   chatConversationName: {
     flex: 1,
     color: "#303B52",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "800",
   },
-  chatConversationTime: { color: "#9AA2B1", fontSize: 10 },
+  chatConversationTime: { color: "#9AA2B1", fontSize: 12 },
   chatConversationService: {
     color: "#788399",
-    fontSize: 10,
+    fontSize: 12,
     marginTop: 3,
   },
   chatConversationBottom: {
@@ -3306,7 +3112,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 5,
   },
-  chatConversationPreview: { flex: 1, color: "#9AA2B1", fontSize: 10 },
+  chatConversationPreview: { flex: 1, color: "#9AA2B1", fontSize: 12 },
   chatConversationPreviewUnread: {
     color: "#4E5A70",
     fontWeight: "700",
@@ -3321,7 +3127,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: 8,
   },
-  chatUnreadText: { color: "#FFFFFF", fontSize: 9, fontWeight: "800" },
+  chatUnreadText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   chatEmptyState: {
     alignItems: "center",
     paddingHorizontal: 22,
@@ -3336,7 +3142,7 @@ const styles = StyleSheet.create({
   },
   chatEmptyText: {
     color: "#8993A6",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 17,
     textAlign: "center",
     marginTop: 5,
@@ -3348,7 +3154,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginTop: 13,
   },
-  chatBrowseButtonText: { color: "#4356C5", fontSize: 9, fontWeight: "800" },
+  chatBrowseButtonText: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
   chatThreadScreen: {
     flex: 1,
     width: "100%",
@@ -3380,7 +3186,7 @@ const styles = StyleSheet.create({
   },
   chatContact: { flex: 1, marginLeft: 10 },
   chatContactName: { color: "#303B52", fontSize: 14, fontWeight: "800" },
-  chatOnline: { color: "#8993A6", fontSize: 10, marginTop: 4 },
+  chatOnline: { color: "#8993A6", fontSize: 12, marginTop: 4 },
   chatMoreButton: {
     width: 38,
     height: 38,
@@ -3414,19 +3220,19 @@ const styles = StyleSheet.create({
   },
   chatInvoiceButtonText: {
     color: "#4356C5",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
   },
   chatServiceCopy: { flex: 1, marginRight: 8 },
   chatServiceEyebrow: {
     color: "#929AAF",
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.8,
   },
   chatServiceName: {
     color: "#4658B6",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     marginTop: 4,
   },
@@ -3436,7 +3242,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     paddingHorizontal: 7,
     paddingVertical: 5,
-    fontSize: 7,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.3,
   },
@@ -3454,7 +3260,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    fontSize: 7,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.6,
     marginBottom: 17,
@@ -3486,7 +3292,7 @@ const styles = StyleSheet.create({
   chatMessageTextMine: { color: "#FFFFFF" },
   chatMessageTime: {
     color: "#9AA2B1",
-    fontSize: 9,
+    fontSize: 12,
     textAlign: "right",
     marginTop: 5,
   },
@@ -3510,7 +3316,7 @@ const styles = StyleSheet.create({
   },
   chatFirstMessageText: {
     color: "#8993A6",
-    fontSize: 12,
+    fontSize: 14,
     lineHeight: 18,
     textAlign: "center",
     marginTop: 5,
@@ -3572,7 +3378,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E9EDFF",
   },
   settingsButtonIcon: { color: "#4356C5", fontSize: 15 },
-  settingsButtonText: { color: "#4356C5", fontSize: 10, fontWeight: "800" },
+  settingsButtonText: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
   profileCard: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
@@ -3604,67 +3410,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  verifiedText: { color: "#FFFFFF", fontSize: 9, fontWeight: "800" },
+  verifiedText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   profileName: {
     color: "#263149",
     fontSize: 14,
     fontWeight: "800",
     marginTop: 10,
   },
-  profileSchool: { color: "#919AAC", fontSize: 9, marginTop: 4 },
+  profileSchool: { color: "#919AAC", fontSize: 12, marginTop: 4 },
   profileRating: {
     color: "#D39433",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "800",
     marginTop: 8,
   },
   profileReviews: { color: "#9AA2B1", fontWeight: "500" },
   profileBio: {
     color: "#737E93",
-    fontSize: 9,
+    fontSize: 12,
     lineHeight: 14,
     textAlign: "center",
     marginTop: 10,
   },
-  sellerBalanceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4356C5",
-    borderRadius: 17,
-    padding: 15,
-    marginTop: 12,
-  },
-  sellerBalanceIcon: {
-    width: 39,
-    height: 39,
-    borderRadius: 13,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sellerBalanceIconText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  sellerBalanceInfo: { flex: 1, marginLeft: 11 },
-  sellerBalanceLabel: {
-    color: "#DDE2FF",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  sellerBalanceAmount: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "800",
-    marginTop: 2,
-  },
-  sellerBalanceCaption: {
-    color: "#DDE2FF",
-    fontSize: 8,
-    marginTop: 3,
-  },
-  sellerBalanceArrow: { color: "#FFFFFF", fontSize: 25, marginLeft: 8 },
   profileActions: { flexDirection: "row", gap: 9, marginTop: 11 },
   profileAction: {
     flex: 1,
@@ -3678,7 +3445,7 @@ const styles = StyleSheet.create({
   profileActionIcon: { color: "#4356C5", fontSize: 19 },
   profileActionText: {
     color: "#45516A",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "700",
     marginTop: 4,
   },
@@ -3715,7 +3482,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2,
   },
-  orderSegmentText: { color: "#818BA0", fontSize: 11, fontWeight: "700" },
+  orderSegmentText: { color: "#818BA0", fontSize: 12, fontWeight: "700" },
   orderSegmentTextActive: { color: "#4356C5" },
   orderEmptyCard: {
     alignItems: "center",
@@ -3736,7 +3503,7 @@ const styles = StyleSheet.create({
   orderEmptyDescription: {
     marginTop: 6,
     color: "#8993A6",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 17,
     textAlign: "center",
   },
@@ -3747,13 +3514,13 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     backgroundColor: "#E9EDFF",
   },
-  orderBrowseButtonText: { color: "#4356C5", fontSize: 11, fontWeight: "800" },
+  orderBrowseButtonText: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
   savedEmpty: {
     color: "#939BAD",
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     padding: 13,
-    fontSize: 9,
+    fontSize: 12,
     lineHeight: 14,
   },
   tabBar: {
@@ -3793,7 +3560,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#FFFFFF",
   },
-  tabLabel: { color: "#9AA3B2", fontSize: 9, fontWeight: "600" },
+  tabLabel: { color: "#9AA3B2", fontSize: 12, fontWeight: "600" },
   tabLabelActive: { color: "#4356C5", fontWeight: "800" },
   modalBackdrop: {
     flex: 1,
@@ -3851,7 +3618,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
     marginBottom: 9,
     color: "#8B94A7",
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.8,
   },
@@ -3872,8 +3639,8 @@ const styles = StyleSheet.create({
   },
   settingsAvatarText: { color: "#4356C5", fontSize: 17, fontWeight: "800" },
   settingsAccountInfo: { flex: 1, marginLeft: 11 },
-  settingsAccountName: { color: "#253149", fontSize: 13, fontWeight: "800" },
-  settingsAccountMeta: { marginTop: 3, color: "#8B94A7", fontSize: 10 },
+  settingsAccountName: { color: "#253149", fontSize: 14, fontWeight: "800" },
+  settingsAccountMeta: { marginTop: 3, color: "#8B94A7", fontSize: 12 },
   settingsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -3894,18 +3661,18 @@ const styles = StyleSheet.create({
   },
   settingsRowGlyph: { color: "#4356C5", fontSize: 17, fontWeight: "700" },
   settingsRowText: { flex: 1, marginLeft: 11 },
-  settingsRowTitle: { color: "#253149", fontSize: 12, fontWeight: "700" },
+  settingsRowTitle: { color: "#253149", fontSize: 14, fontWeight: "700" },
   settingsRowDescription: {
     marginTop: 3,
     color: "#8B94A7",
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 15,
   },
   settingsChevron: { marginLeft: 10, color: "#A6ADBB", fontSize: 24 },
   settingsError: {
     marginTop: 8,
     color: "#B54747",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 16,
   },
   settingsLogoutRow: {
@@ -3926,7 +3693,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF0EF",
   },
   settingsLogoutGlyph: { color: "#C56868", fontSize: 19, fontWeight: "700" },
-  settingsLogoutTitle: { color: "#C56868", fontSize: 12, fontWeight: "800" },
+  settingsLogoutTitle: { color: "#C56868", fontSize: 14, fontWeight: "800" },
   settingsDetailCard: {
     width: "100%",
     maxWidth: 380,
@@ -3942,7 +3709,7 @@ const styles = StyleSheet.create({
   settingsDetailText: {
     marginTop: 11,
     color: "#667188",
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 20,
   },
   settingsDetailButton: {
@@ -3952,7 +3719,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#4356C5",
   },
-  settingsDetailButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
+  settingsDetailButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
   logoutDialog: {
     width: "100%",
     maxWidth: 380,
@@ -3968,7 +3735,7 @@ const styles = StyleSheet.create({
   logoutDialogMessage: {
     marginTop: 9,
     color: "#7F899E",
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 19,
   },
   logoutDialogActions: {
@@ -3986,7 +3753,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#F1F3F8",
   },
-  logoutCancelText: { color: "#59647A", fontSize: 13, fontWeight: "700" },
+  logoutCancelText: { color: "#59647A", fontSize: 14, fontWeight: "700" },
   logoutConfirmButton: {
     minWidth: 84,
     alignItems: "center",
@@ -3996,7 +3763,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#C56868",
   },
-  logoutConfirmText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
+  logoutConfirmText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   detailSheet: {
     backgroundColor: "#F8F9FC",
     borderTopLeftRadius: 24,
@@ -4041,13 +3808,13 @@ const styles = StyleSheet.create({
   serviceFormContent: { paddingTop: 13, paddingBottom: 12 },
   serviceFormIntro: {
     color: "#788399",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 17,
     marginBottom: 7,
   },
   formLabel: {
     color: "#303B52",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     marginTop: 15,
     marginBottom: 7,
@@ -4059,14 +3826,14 @@ const styles = StyleSheet.create({
     borderColor: "#E5E9F1",
     backgroundColor: "#FFFFFF",
     color: "#303B52",
-    fontSize: 12,
+    fontSize: 14,
     paddingHorizontal: 13,
     paddingVertical: 11,
   },
   formDescriptionInput: { minHeight: 105, lineHeight: 18 },
   formHint: {
     color: "#9AA2B1",
-    fontSize: 9,
+    fontSize: 12,
     textAlign: "right",
     marginTop: 4,
   },
@@ -4084,7 +3851,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E9EDFF",
     borderColor: "#CDD5FF",
   },
-  formChoiceText: { color: "#6E788D", fontSize: 10, fontWeight: "700" },
+  formChoiceText: { color: "#6E788D", fontSize: 12, fontWeight: "700" },
   formChoiceTextActive: { color: "#4356C5" },
   formPriceInput: {
     minHeight: 47,
@@ -4098,14 +3865,14 @@ const styles = StyleSheet.create({
   },
   formPricePrefix: {
     color: "#66718A",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     marginRight: 9,
   },
   formPriceTextInput: {
     flex: 1,
     color: "#303B52",
-    fontSize: 12,
+    fontSize: 14,
     paddingVertical: 11,
   },
   serviceFormError: {
@@ -4113,7 +3880,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF0F1",
     borderRadius: 10,
     padding: 10,
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 15,
     marginTop: 14,
   },
@@ -4132,7 +3899,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E9F1",
   },
-  serviceFormCancelText: { color: "#657087", fontSize: 11, fontWeight: "800" },
+  serviceFormCancelText: { color: "#657087", fontSize: 12, fontWeight: "800" },
   serviceFormSubmit: {
     minHeight: 47,
     flex: 1.5,
@@ -4152,7 +3919,7 @@ const styles = StyleSheet.create({
   },
   serviceFormSubmitText: {
     color: "#FFFFFF",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
   },
   sheetHandle: {
@@ -4179,7 +3946,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     paddingHorizontal: 9,
     paddingVertical: 5,
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "800",
   },
   detailTitleRow: {
@@ -4198,13 +3965,13 @@ const styles = StyleSheet.create({
   close: { color: "#748096", fontSize: 24 },
   detailSectionTitle: {
     color: "#303B52",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     marginTop: 14,
   },
   detailDescription: {
     color: "#737E93",
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 16,
     marginTop: 5,
   },
@@ -4224,7 +3991,7 @@ const styles = StyleSheet.create({
   },
   startingLabel: {
     color: "#9AA2B1",
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.6,
   },
@@ -4240,5 +4007,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 21,
     paddingVertical: 11,
   },
-  chatText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
+  chatText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
 });

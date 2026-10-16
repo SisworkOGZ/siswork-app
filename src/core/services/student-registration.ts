@@ -1,5 +1,5 @@
-import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/core/services/supabase";
+import type { Session } from "@supabase/supabase-js";
 
 export interface StudentRegistrationData {
   nisn: string;
@@ -16,7 +16,9 @@ export async function saveStudentRegistration(
       refresh_token: session.refresh_token,
     });
   if (sessionError) {
-    throw new Error(`Gagal memulihkan sesi registrasi: ${sessionError.message}`);
+    throw new Error(
+      `Gagal memulihkan sesi registrasi: ${sessionError.message}`,
+    );
   }
   if (!authData.user || authData.user.id !== userId) {
     throw new Error("Sesi login tidak cocok dengan akun yang didaftarkan.");

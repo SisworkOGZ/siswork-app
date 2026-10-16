@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,6 +15,8 @@ import {
 } from "react-native";
 import { supabase } from "@/core/services/supabase";
 import { saveStudentRegistration } from "@/core/services/student-registration";
+import { AppColors } from "@/constants/app-theme";
+import { SisworkLogo } from "@/components/siswork-logo";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -62,73 +65,82 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
-        {/* Header / Title */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Selamat Datang</Text>
-          <Text style={styles.subtitle}>
-            Silakan masuk ke akun Siswork Anda
-          </Text>
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.authScrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            <View style={styles.headerContainer}>
+              <SisworkLogo size={36} style={styles.brandLogo} />
+              <Text style={styles.title}>Selamat Datang</Text>
+              <Text style={styles.subtitle}>
+                Masuk untuk menemukan dan membagikan keahlian.
+              </Text>
+            </View>
 
-        {/* Form Inputs */}
-        <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Masukkan email Anda"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <View style={styles.formContainer}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  accessibilityLabel="Email"
+                  autoComplete="email"
+                  style={styles.input}
+                  placeholder="Masukkan email Anda"
+                  placeholderTextColor="#8992A5"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!loading}
+                  returnKeyType="next"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  accessibilityLabel="Password"
+                  autoComplete="current-password"
+                  style={styles.input}
+                  placeholder="Masukkan password Anda"
+                  placeholderTextColor="#8992A5"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={!loading}
+                  returnKeyType="done"
+                  onSubmitEditing={() => void handleLogin()}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={loading}
+                accessibilityRole="button"
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.buttonText}>Masuk</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Masukkan password Anda"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>Belum punya akun? </Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={() => router.push("/auth/screens/RegisterScreen")}
+              disabled={loading}
+            >
+              <Text style={styles.registerText}>Daftar</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Lupa Password */}
-          <TouchableOpacity style={styles.forgotButton} disabled={loading}>
-            <Text style={styles.forgotText}>Lupa Password?</Text>
-          </TouchableOpacity>
-
-          {/* Tombol Login */}
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Masuk</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer / Register Prompt */}
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Belum punya akun? </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/screens/RegisterScreen")}
-            disabled={loading}
-          >
-            <Text style={styles.registerText}>Daftar</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -137,63 +149,78 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F9FC",
+    backgroundColor: AppColors.canvas,
   },
   innerContainer: {
     flex: 1,
-    paddingHorizontal: 24,
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 520,
+  },
+  authScrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+  card: {
+    padding: 24,
+    borderRadius: 22,
+    backgroundColor: AppColors.surface,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    shadowColor: AppColors.ink,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  brandLogo: {
+    marginBottom: 16,
   },
   headerContainer: {
-    marginBottom: 32,
+    marginBottom: 26,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1A1D1E",
+    fontSize: 30,
+    fontWeight: "800",
+    color: AppColors.ink,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: "#6C757D",
+    lineHeight: 22,
+    color: AppColors.muted,
   },
   formContainer: {
-    marginBottom: 24,
+    marginBottom: 0,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#333333",
+    fontWeight: "700",
+    color: AppColors.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    minHeight: 52,
+    backgroundColor: AppColors.surface,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 10,
+    borderColor: AppColors.border,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 15,
-    color: "#1A1D1E",
-  },
-  forgotButton: {
-    alignSelf: "flex-end",
-    marginBottom: 24,
-  },
-  forgotText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#2563EB",
+    fontSize: 16,
+    color: AppColors.ink,
   },
   button: {
-    backgroundColor: "#2563EB",
-    borderRadius: 10,
+    backgroundColor: AppColors.brand,
+    borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
-    shadowColor: "#2563EB",
+    shadowColor: AppColors.brand,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -214,11 +241,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: "#6C757D",
+    color: AppColors.muted,
   },
   registerText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#2563EB",
+    fontWeight: "700",
+    color: AppColors.brand,
   },
 });

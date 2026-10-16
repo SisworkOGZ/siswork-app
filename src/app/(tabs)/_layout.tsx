@@ -4,6 +4,7 @@ import { Redirect } from "expo-router";
 import { supabase } from "@/core/services/supabase";
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import { SisworkTabs } from "@/components/custom-tab-bar";
+import { AppColors } from "@/constants/app-theme";
 
 export default function TabLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -42,7 +43,7 @@ export default function TabLayout() {
   if (isAuthenticated === null) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={AppColors.brand} />
       </View>
     );
   }
@@ -64,6 +65,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: AppColors.canvas,
   },
 });

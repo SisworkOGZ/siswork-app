@@ -1,0 +1,15 @@
+export const AppColors = {
+  brand: "#4356C5",
+  brandDark: "#354BB6",
+  brandTint: "#EEF0FF",
+  canvas: "#F7F8FC",
+  surface: "#FFFFFF",
+  ink: "#202B42",
+  text: "#303B52",
+  muted: "#667085",
+  subtle: "#8992A5",
+  border: "#E5E9F1",
+  error: "#B34E5A",
+  errorSurface: "#FFF0F1",
+  success: "#16803C",
+} as const;

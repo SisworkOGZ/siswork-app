@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,15 +10,18 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Linking from "expo-linking";
 import { loadMyProjects } from "@/core/services/projects";
 import { supabase } from "@/core/services/supabase";
 import type { ProjectRow } from "@/core/types/communication";
+import { AppColors } from "@/constants/app-theme";
 
 export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [project, setProject] = useState<ProjectRow | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -30,6 +34,7 @@ export default function ProjectDetailScreen() {
         if (!data.user) throw new Error("Silakan login untuk melihat proyek.");
         const projects = await loadMyProjects(data.user.id);
         if (current) {
+          setUserId(data.user.id);
           setProject(projects.find((item) => item.id === id) ?? null);
           if (!projects.some((item) => item.id === id)) {
             setError("Proyek tidak ditemukan atau Anda tidak memiliki akses.");
@@ -53,6 +58,20 @@ export default function ProjectDetailScreen() {
     };
   }, [id]);
 
+  const openDelivery = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch (openError) {
+      console.error("Gagal membuka tautan hasil kerja:", openError);
+      Alert.alert(
+        "Hasil kerja tidak dapat dibuka",
+        openError instanceof Error
+          ? openError.message
+          : "Periksa koneksi atau minta seller mengirim tautan yang lain.",
+      );
+    }
+  };
+
   return (
     <ScrollView
       contentContainerStyle={[
@@ -64,17 +83,28 @@ export default function ProjectDetailScreen() {
         <Text style={styles.backText}>‹  Kembali</Text>
       </Pressable>
       {loading ? (
-        <ActivityIndicator color="#4356C5" style={styles.loading} />
+        <ActivityIndicator color={AppColors.brand} style={styles.loading} />
       ) : project ? (
         <View style={styles.card}>
           <Text style={styles.eyebrow}>DETAIL PROYEK</Text>
           <Text style={styles.title}>{project.title}</Text>
+          <Text style={styles.role}>
+            {project.seller_id === userId
+              ? "Kamu sebagai seller"
+              : "Kamu sebagai buyer"}
+          </Text>
           <Text style={styles.status}>
-            {project.status === "in_progress"
-              ? "Dalam Proses"
-              : project.status === "revision"
-                ? "Dalam Revisi"
-                : "Selesai"}
+            {project.status === "completed"
+              ? "Selesai"
+              : project.status === "in_progress"
+                ? "Sedang dikerjakan"
+                : project.revision_request
+                  ? project.seller_id === userId
+                    ? "Perlu diperbaiki"
+                    : "Menunggu revisi"
+                  : project.seller_id === userId
+                    ? "Menunggu buyer meninjau"
+                    : "Hasil siap ditinjau"}
           </Text>
           <Text style={styles.amount}>
             Rp{Number(project.amount).toLocaleString("id-ID")}
@@ -90,6 +120,16 @@ export default function ProjectDetailScreen() {
               langsung dengan seller.
             </Text>
           )}
+          {project.status === "revision" &&
+            !project.revision_request &&
+            project.revision_count >=
+              project.revision_limit + project.extra_revisions_granted && (
+              <Text style={styles.extraRevisionNotice}>
+                Batas revisi yang disepakati telah habis. Revisi berikutnya
+                dikenakan biaya tambahan. Sepakati dan bayarkan langsung kepada
+                seller sebelum seller membuka revisi tambahan.
+              </Text>
+            )}
           {!!project.description && (
             <Text style={styles.description}>{project.description}</Text>
           )}
@@ -100,7 +140,14 @@ export default function ProjectDetailScreen() {
             </View>
           )}
           {!!project.delivery_url && (
-            <Text style={styles.delivery}>{project.delivery_url}</Text>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => {
+                if (project.delivery_url) void openDelivery(project.delivery_url);
+              }}
+            >
+              <Text style={styles.delivery}>Buka hasil kerja ↗</Text>
+            </Pressable>
           )}
         </View>
       ) : (
@@ -116,19 +163,21 @@ export default function ProjectDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, paddingHorizontal: 20, gap: 16, backgroundColor: "#F7F8FC" },
+  container: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 8, gap: 16, backgroundColor: AppColors.canvas },
   back: { alignSelf: "flex-start", paddingVertical: 8 },
-  backText: { color: "#4356C5", fontSize: 14, fontWeight: "700" },
+  backText: { color: AppColors.brand, fontSize: 14, fontWeight: "700" },
   loading: { marginTop: 50 },
-  card: { padding: 20, borderRadius: 22, backgroundColor: "#FFFFFF", gap: 13 },
+  card: { width: "100%", maxWidth: 600, alignSelf: "center", padding: 22, borderRadius: 22, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.border, gap: 13 },
   eyebrow: { color: "#667085", fontSize: 10, fontWeight: "800", letterSpacing: 1.4 },
   title: { color: "#172033", fontSize: 24, fontWeight: "800" },
-  status: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 18, backgroundColor: "#EEF0FF", color: "#4356C5", fontSize: 11, fontWeight: "800" },
+  role: { color: AppColors.muted, fontSize: 13, fontWeight: "600" },
+  status: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 18, backgroundColor: AppColors.brandTint, color: AppColors.brand, fontSize: 12, fontWeight: "800" },
   amount: { color: "#172033", fontSize: 19, fontWeight: "800" },
-  revisionAllowance: { color: "#4356C5", fontSize: 13, fontWeight: "700" },
+  revisionAllowance: { color: AppColors.brand, fontSize: 13, fontWeight: "700" },
   description: { color: "#667085", fontSize: 14, lineHeight: 21 },
   revision: { padding: 13, borderRadius: 14, backgroundColor: "#FFF7E8", gap: 5 },
   revisionLabel: { color: "#9A5B00", fontSize: 12, fontWeight: "800" },
-  delivery: { color: "#4356C5", fontSize: 14, lineHeight: 21 },
+  extraRevisionNotice: { padding: 13, borderRadius: 14, backgroundColor: "#FFF7E8", color: "#9A5B00", fontSize: 14, lineHeight: 20 },
+  delivery: { color: AppColors.brand, fontSize: 14, lineHeight: 21 },
   error: { padding: 14, borderRadius: 14, backgroundColor: "#FDECEF", color: "#A12A38", fontSize: 14 },
 });

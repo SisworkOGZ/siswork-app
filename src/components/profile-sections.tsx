@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
   },
   sectionHeadingCopy: { flex: 1 },
   sectionTitle: { color: "#202B42", fontSize: 17, fontWeight: "800" },
-  sectionSubtitle: { color: "#8992A5", fontSize: 11, marginTop: 3 },
+  sectionSubtitle: { color: "#8992A5", fontSize: 12, marginTop: 3 },
   addButton: {
     minHeight: 38,
     alignItems: "center",
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     backgroundColor: "#E9EDFF",
   },
-  addButtonText: { color: "#4356C5", fontSize: 10, fontWeight: "800" },
+  addButtonText: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
   cardList: { gap: 11 },
   portfolioCard: {
     overflow: "hidden",
@@ -781,11 +781,11 @@ const styles = StyleSheet.create({
   cardTitle: { color: "#26324A", fontSize: 14, fontWeight: "800" },
   cardDescription: {
     color: "#798399",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 17,
     marginTop: 5,
   },
-  projectLink: { color: "#4356C5", fontSize: 10, marginTop: 7 },
+  projectLink: { color: "#4356C5", fontSize: 12, marginTop: 7 },
   actionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#F1F3F8",
   },
-  secondaryActionText: { color: "#53617C", fontSize: 10, fontWeight: "800" },
+  secondaryActionText: { color: "#53617C", fontSize: 12, fontWeight: "800" },
   deleteAction: {
     minHeight: 34,
     alignItems: "center",
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFF0F1",
   },
-  deleteActionText: { color: "#B34E5A", fontSize: 10, fontWeight: "800" },
+  deleteActionText: { color: "#B34E5A", fontSize: 12, fontWeight: "800" },
   emptyCard: {
     alignItems: "flex-start",
     padding: 16,
@@ -819,10 +819,10 @@ const styles = StyleSheet.create({
     borderColor: "#E9ECF2",
     backgroundColor: "#FFFFFF",
   },
-  emptyTitle: { color: "#303B52", fontSize: 13, fontWeight: "800" },
+  emptyTitle: { color: "#303B52", fontSize: 14, fontWeight: "800" },
   emptyDescription: {
     color: "#8790A2",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 17,
     marginTop: 5,
   },
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E9EDFF",
     marginTop: 12,
   },
-  emptyActionText: { color: "#4356C5", fontSize: 10, fontWeight: "800" },
+  emptyActionText: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
   loading: { paddingVertical: 20 },
   serviceCard: {
     padding: 14,
@@ -850,8 +850,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 9,
   },
-  categoryTag: { color: "#4356C5", fontSize: 10, fontWeight: "800" },
-  statusTag: { fontSize: 9, fontWeight: "800" },
+  categoryTag: { color: "#4356C5", fontSize: 12, fontWeight: "800" },
+  statusTag: { fontSize: 12, fontWeight: "800" },
   statusActive: { color: "#26805A" },
   statusInactive: { color: "#8992A5" },
   serviceMeta: {
@@ -860,14 +860,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 10,
   },
-  servicePrice: { color: "#293650", fontSize: 12, fontWeight: "800" },
-  serviceEta: { color: "#8790A2", fontSize: 10 },
+  servicePrice: { color: "#293650", fontSize: 14, fontWeight: "800" },
+  serviceEta: { color: "#8790A2", fontSize: 12 },
   errorText: {
     color: "#B34E5A",
     backgroundColor: "#FFF0F1",
     borderRadius: 10,
     padding: 10,
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 15,
   },
   modalBackdrop: {
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
   },
   formEyebrow: {
     color: "#818BA1",
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.1,
   },
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
   formContent: { paddingTop: 12, paddingBottom: 12 },
   label: {
     color: "#303B52",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     marginTop: 15,
     marginBottom: 7,
@@ -932,13 +932,13 @@ const styles = StyleSheet.create({
     borderColor: "#E5E9F1",
     backgroundColor: "#FFFFFF",
     color: "#303B52",
-    fontSize: 12,
+    fontSize: 14,
     paddingHorizontal: 13,
     paddingVertical: 11,
   },
   multilineInput: { minHeight: 100, lineHeight: 18 },
   selectedMedia: { gap: 8 },
-  fileName: { color: "#657087", fontSize: 10 },
+  fileName: { color: "#657087", fontSize: 12 },
   mediaPicker: {
     minHeight: 75,
     flexDirection: "row",
@@ -952,7 +952,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   mediaPickerIcon: { color: "#4356C5", fontSize: 20, fontWeight: "800" },
-  mediaPickerText: { color: "#657087", fontSize: 10, fontWeight: "700" },
+  mediaPickerText: { color: "#657087", fontSize: 12, fontWeight: "700" },
   mediaPickerCompact: { alignSelf: "flex-start", marginTop: 7, padding: 6 },
   submitButton: {
     minHeight: 48,
@@ -963,5 +963,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   disabledButton: { opacity: 0.65 },
-  submitText: { color: "#FFFFFF", fontSize: 11, fontWeight: "800" },
+  submitText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
 });
