@@ -29,6 +29,13 @@ export type MessageRow = {
 };
 
 export type ProjectStatus = "in_progress" | "revision" | "completed";
+export type ProjectPaymentStatus =
+  | "not_required"
+  | "unpaid"
+  | "pending"
+  | "paid"
+  | "failed"
+  | "refunded";
 
 export type ProjectRow = {
   id: string;
@@ -40,6 +47,7 @@ export type ProjectRow = {
   description: string | null;
   amount: number;
   status: ProjectStatus;
+  payment_status: ProjectPaymentStatus;
   revision_limit: number;
   revision_count: number;
   extra_revisions_granted: number;

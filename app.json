@@ -8,7 +8,6 @@
     "scheme": "siswork",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.siswork.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

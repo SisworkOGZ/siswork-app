@@ -17,6 +17,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="auth/screens/LoginScreen" />
+          <Stack.Screen name="users/[id]" />
         </Stack>
       </ThemeProvider>
     </TabBarVisibilityProvider>

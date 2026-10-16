@@ -19,6 +19,7 @@ import { supabase } from "@/core/services/supabase";
 import { useTabBarVisibility } from "@/components/tab-bar-visibility";
 import { AppColors } from "@/constants/app-theme";
 import { SisworkLogo } from "@/components/siswork-logo";
+import { SellerWalletSection } from "@/components/seller-wallet-section";
 import { ChatSystemCard } from "@/components/chat-system-card";
 import { ChatMediaCard } from "@/components/chat-media-card";
 import {
@@ -933,6 +934,10 @@ export default function SisworkDashboard({
       setIsStartingConversation(false);
     }
   };
+  const openUserProfile = (userId: string) => {
+    setDetail(null);
+    router.push({ pathname: "/users/[id]", params: { id: userId } });
+  };
   const sendChatMessage = async () => {
     const text = draftMessage.trim();
     if (
@@ -1435,6 +1440,9 @@ export default function SisworkDashboard({
         onToggle={(service) => void updateServiceStatus(service)}
         onDelete={deleteService}
       />
+      {profile?.isSeller && profile.id ? (
+        <SellerWalletSection sellerId={profile.id} />
+      ) : null}
       {sectionHeading("Jasa tersimpan", `${saved.length} jasa disimpan`)}
       {saved.length ? (
         <View style={styles.serviceList}>
@@ -1568,6 +1576,15 @@ export default function SisworkDashboard({
                 {selectedConversation.name}
               </Text>
               <Text style={styles.chatOnline}>Percakapan Siswork</Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Lihat profil ${selectedConversation.name}`}
+                onPress={() =>
+                  openUserProfile(selectedConversation.peerId)
+                }
+              >
+                <Text style={styles.profileLink}>Lihat profil pelajar</Text>
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               accessibilityLabel="Info percakapan"
@@ -2173,8 +2190,8 @@ export default function SisworkDashboard({
             >
                 <Text style={styles.formHint}>
                   Pastikan buyer menyetujui lingkup dan jumlahnya sebelum lanjut.
-                  Proyek langsung dibuat, tetapi pembayaran dilakukan di luar
-                  aplikasi.
+                  Setelah invoice dibuat, buyer dapat membayar langsung secara
+                  aman via payment gateway Midtrans di dalam aplikasi.
                 </Text>
                 <Text style={styles.formLabel}>Judul proyek</Text>
               <TextInput
@@ -2299,8 +2316,18 @@ export default function SisworkDashboard({
                     <Text style={styles.avatarInitials}>{detail.initials}</Text>
                   </View>
                   <View style={styles.talentDetails}>
-                    <Text style={styles.talentName}>{detail.talent}</Text>
-                    <Text style={styles.school}>{detail.school}</Text>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`Lihat profil ${detail.talent}`}
+                      disabled={!detail.sellerId}
+                      onPress={() => {
+                        if (detail.sellerId) openUserProfile(detail.sellerId);
+                      }}
+                    >
+                      <Text style={styles.talentName}>{detail.talent}</Text>
+                      <Text style={styles.school}>{detail.school}</Text>
+                      <Text style={styles.profileLink}>Lihat profil ›</Text>
+                    </TouchableOpacity>
                   </View>
                   <Text style={styles.rating}>★ {detail.rating}</Text>
                 </View>
@@ -2923,6 +2950,12 @@ const styles = StyleSheet.create({
   talentDetails: { flex: 1, marginLeft: 8 },
   talentName: { color: "#4B566C", fontSize: 12, fontWeight: "700" },
   school: { color: "#9AA2B1", fontSize: 12, marginTop: 3 },
+  profileLink: {
+    color: AppColors.brand,
+    fontSize: 11,
+    fontWeight: "700",
+    marginTop: 4,
+  },
   rating: { color: "#D39433", fontSize: 12, fontWeight: "800" },
   serviceFooter: {
     marginTop: 10,

@@ -17,7 +17,7 @@ export function ChatSystemCard({ invoice }: { invoice: InvoicePayload }) {
         Rp{invoice.amount.toLocaleString("id-ID")}
       </Text>
       <Text style={styles.paymentNote}>
-        Pembayaran disepakati dan dilakukan langsung di luar aplikasi.
+        Pembayaran aman via Midtrans. Saldo ditahan sampai proyek selesai.
       </Text>
       {invoice.revision_limit !== undefined && (
         <Text style={styles.revisions}>
@@ -34,7 +34,7 @@ export function ChatSystemCard({ invoice }: { invoice: InvoicePayload }) {
         }
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
-        <Text style={styles.buttonText}>Buka Detail Proyek</Text>
+        <Text style={styles.buttonText}>Buka Detail & Bayar</Text>
       </Pressable>
     </View>
   );

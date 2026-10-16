@@ -14,10 +14,12 @@ import {
   completeProject,
   grantExtraProjectRevision,
   loadMyProjects,
+  payProjectWithMidtrans,
   requestProjectRevision,
   submitProjectDelivery,
 } from "@/core/services/projects";
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { supabase } from "@/core/services/supabase";
 import type { ProjectRow, ProjectStatus } from "@/core/types/communication";
 import { AppColors } from "@/constants/app-theme";
@@ -107,6 +109,25 @@ export default function ProjectsScreen() {
     }
   };
 
+  const payProject = async (project: ProjectRow) => {
+    setBusyProjectId(project.id);
+    setError("");
+    try {
+      const { redirectUrl } = await payProjectWithMidtrans(project.id);
+      await WebBrowser.openBrowserAsync(redirectUrl);
+      await refresh();
+    } catch (paymentError) {
+      console.error("Gagal memulai pembayaran proyek:", paymentError);
+      setError(
+        paymentError instanceof Error
+          ? `Pembayaran belum dapat dimulai: ${paymentError.message}`
+          : "Pembayaran belum dapat dimulai. Silakan coba lagi.",
+      );
+    } finally {
+      setBusyProjectId(null);
+    }
+  };
+
   return (
     <ScrollView
       contentContainerStyle={[
@@ -118,9 +139,8 @@ export default function ProjectsScreen() {
       <Text style={styles.eyebrow}>RUANG KERJA</Text>
       <Text style={styles.title}>Proyek</Text>
       <Text style={styles.subtitle}>
-        Pastikan lingkup dan harga disepakati di Chat. Pembayaran dilakukan di
-        luar aplikasi. Revisi di luar batas yang disepakati juga perlu
-        disepakati dan dibayar langsung kepada seller.
+        Bayar invoice proyek melalui Midtrans. Saldo ditahan sampai buyer
+        menyetujui hasil kerja; revisi tambahan perlu disepakati dengan seller.
       </Text>
 
       <View style={styles.segmentBar}>
@@ -175,6 +195,42 @@ export default function ProjectsScreen() {
               <Text style={styles.role}>
                 {isSeller ? "Kamu sebagai seller" : "Kamu sebagai buyer"}
               </Text>
+              {project.payment_status !== "not_required" && (
+                <View style={styles.paymentStatus}>
+                  <Text style={styles.paymentStatusText}>
+                    Pembayaran:{" "}
+                    {project.payment_status === "paid"
+                      ? "terverifikasi · saldo ditahan"
+                      : project.payment_status === "pending"
+                        ? "menunggu pembayaran"
+                        : project.payment_status === "refunded"
+                          ? "dikembalikan"
+                          : project.payment_status === "failed"
+                            ? "gagal"
+                            : "belum dibayar"}
+                  </Text>
+                </View>
+              )}
+              {!isSeller &&
+                project.status !== "completed" &&
+                project.payment_status !== "not_required" &&
+                project.payment_status !== "paid" &&
+                project.payment_status !== "refunded" && (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isBusy}
+                    onPress={() => void payProject(project)}
+                    style={[styles.primaryButton, isBusy && styles.disabled]}
+                  >
+                    <Text style={styles.primaryButtonText}>
+                      {isBusy
+                        ? "Membuka pembayaran..."
+                        : project.payment_status === "pending"
+                          ? "Lanjutkan pembayaran"
+                          : "Bayar via Midtrans"}
+                    </Text>
+                  </Pressable>
+                )}
               <Text style={styles.revisionAllowance}>
                 Revisi digunakan: {project.revision_count} /{" "}
                 {project.revision_limit + project.extra_revisions_granted}
@@ -211,38 +267,50 @@ export default function ProjectsScreen() {
                 (project.status === "in_progress" ||
                   Boolean(project.revision_request)) && (
                 <View style={styles.actionGroup}>
-                  <TextInput
-                    accessibilityLabel="Tautan hasil kerja"
-                    autoCapitalize="none"
-                    editable={!isBusy}
-                    keyboardType="url"
-                    onChangeText={(value) =>
-                      setDeliveries((current) => ({
-                        ...current,
-                        [project.id]: value,
-                      }))
-                    }
-                    placeholder="Tempel tautan hasil kerja"
-                    placeholderTextColor="#98A2B3"
-                    style={styles.input}
-                    value={deliveries[project.id] ?? ""}
-                  />
-                  <Pressable
-                    disabled={isBusy}
-                    onPress={() =>
-                      void runProjectAction(project.id, () =>
-                        submitProjectDelivery(
-                          project.id,
-                          deliveries[project.id] ?? "",
-                        ),
-                      )
-                    }
-                    style={[styles.primaryButton, isBusy && styles.disabled]}
-                  >
-                    <Text style={styles.primaryButtonText}>
-                      {isBusy ? "Mengirim..." : "Kirim Hasil Kerja"}
-                    </Text>
-                  </Pressable>
+                  {project.payment_status !== "paid" &&
+                  project.payment_status !== "not_required" ? (
+                    <View style={styles.paymentPendingNotice}>
+                      <Text style={styles.paymentPendingNoticeText}>
+                        Menunggu buyer menyelesaikan pembayaran via Midtrans.
+                        Hasil kerja dapat dikirimkan setelah pembayaran terverifikasi.
+                      </Text>
+                    </View>
+                  ) : (
+                    <>
+                      <TextInput
+                        accessibilityLabel="Tautan hasil kerja"
+                        autoCapitalize="none"
+                        editable={!isBusy}
+                        keyboardType="url"
+                        onChangeText={(value) =>
+                          setDeliveries((current) => ({
+                            ...current,
+                            [project.id]: value,
+                          }))
+                        }
+                        placeholder="Tempel tautan hasil kerja"
+                        placeholderTextColor="#98A2B3"
+                        style={styles.input}
+                        value={deliveries[project.id] ?? ""}
+                      />
+                      <Pressable
+                        disabled={isBusy}
+                        onPress={() =>
+                          void runProjectAction(project.id, () =>
+                            submitProjectDelivery(
+                              project.id,
+                              deliveries[project.id] ?? "",
+                            ),
+                          )
+                        }
+                        style={[styles.primaryButton, isBusy && styles.disabled]}
+                      >
+                        <Text style={styles.primaryButtonText}>
+                          {isBusy ? "Mengirim..." : "Kirim Hasil Kerja"}
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
                 </View>
               )}
 
@@ -353,7 +421,10 @@ export default function ProjectsScreen() {
                   >
                     <Text style={styles.secondaryButtonText}>Minta Revisi</Text>
                   </Pressable>
-                  {!!project.delivery_url && !project.revision_request && (
+                  {!!project.delivery_url &&
+                    !project.revision_request &&
+                    (project.payment_status === "paid" ||
+                      project.payment_status === "not_required") && (
                     <Pressable
                       disabled={isBusy}
                       onPress={() =>
@@ -379,6 +450,15 @@ export default function ProjectsScreen() {
                       </Text>
                     </Pressable>
                   )}
+                  {!!project.delivery_url &&
+                    !project.revision_request &&
+                    project.payment_status !== "paid" &&
+                    project.payment_status !== "not_required" && (
+                      <Text style={styles.extraRevisionNotice}>
+                        Selesaikan pembayaran melalui Midtrans sebelum
+                        menyetujui hasil kerja.
+                      </Text>
+                    )}
                 </View>
               )}
               {project.status === "revision" &&
@@ -456,8 +536,32 @@ const styles = StyleSheet.create({
   secondaryButton: { alignItems: "center", paddingVertical: 13, borderRadius: 12, backgroundColor: AppColors.brandTint },
   secondaryButtonText: { color: AppColors.brand, fontSize: 14, fontWeight: "800" },
   disabled: { opacity: 0.55 },
+  paymentStatus: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "#F0F4FF",
+  },
+  paymentStatusText: {
+    color: "#2C4075",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  paymentPendingNotice: {
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#FFF7E8",
+  },
+  paymentPendingNoticeText: {
+    color: "#9A5B00",
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
   emptyCard: { width: "100%", alignItems: "center", paddingHorizontal: 24, paddingVertical: 34, borderRadius: 20, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.border, gap: 8, marginTop: 4 },
   emptyIcon: { color: AppColors.brand, fontSize: 30 },
   emptyTitle: { color: "#172033", fontSize: 16, fontWeight: "800" },
   emptyText: { color: "#667085", fontSize: 13, lineHeight: 19, textAlign: "center" },
 });
+
